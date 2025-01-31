@@ -1,0 +1,673 @@
+// Customizable Area Start
+import { IBlock } from "../../../framework/src/IBlock";
+import { Message } from "../../../framework/src/Message";
+import { BlockComponent } from "../../../framework/src/BlockComponent";
+import MessageEnum, { getName } from "../../../framework/src/Messages/MessageEnum";
+import { runEngine } from "../../../framework/src/RunEngine";
+import { IMenuItems, PermissionGroupArray, IMyUser, PermissionName } from "./utils";
+import React from "react";
+import {
+  CustomEnums,
+  getCustomEnumName,
+} from "../../utilities/src/CustomBlockHelpers";
+import PageContainerWebAdapter from "../../adapters/src/PageContainerWebAdapter";
+import {
+  setStorageData,
+  getStorageData,
+  removeStorageData,
+} from "framework/src/Utilities";
+import { redirectToDashboardTabBasedOnPermission } from "../../../components/src/DashboardTabPanel.web";
+export const configJSON = require("./config");
+let shouldScanFile = true;
+
+export interface IUserContext {
+  isSuperAdmin: boolean;
+  user: IMyUser | undefined;
+  refreshUser: () => void;
+}
+export interface ISidebarDropdown {
+  store: boolean;
+  settings: unknown;
+  general: unknown;
+  products: boolean;
+  marketing: boolean;
+  customer: boolean;
+  homeCleanProduct: boolean;
+  hardware: boolean;
+}
+
+// Customizable Area End
+
+export interface Props {
+  // Customizable Area Start
+  navigation?: {
+    location: { pathname: string },
+    goBack: Function;
+    navigate: Function;
+    getParam: Function;
+  };
+  id?: string;
+  onOpenedChanged?: (opened: boolean) => void;
+  onDrawerWidthChanged?: (width: number) => void;
+  // Customizable Area End
+}
+
+interface S {
+  // Customizable Area Start
+  searchText: string;
+  open: boolean;
+  marketingOpened: boolean;
+  customerOpened: boolean;
+  settingsOpened: boolean;
+  generalSettingsOpened: boolean;
+  myUser?: IMyUser;
+  userShortName: string;
+  activeMenu: string;
+  isInnerProductsOpen: boolean;
+  isHomeCleanProductOpen: boolean;
+  isInnerOrderOpen: boolean;
+  isHardwareOpen: boolean;
+  tokenReady: boolean;
+  pinned: boolean;
+  sidebarDropdown: ISidebarDropdown;
+  isB2bActive: boolean;
+  isInnerB2BSettingsOpen: boolean;
+  // Customizable Area End
+}
+
+interface SS {
+  // Customizable Area Start
+  id: string;
+  // Customizable Area End
+}
+
+export default class SideBarController extends BlockComponent<Props, S, SS> {
+  // Customizable Area Start
+  popoverRef: HTMLElement | null = null;
+  pageAdapter: PageContainerWebAdapter;
+  // Customizable Area End
+
+  constructor(props: Props) {
+    super(props);
+    this.receive = this.receive.bind(this);
+
+    // Customizable Area Start
+    this.subScribedMessages = [
+      getName(MessageEnum.AccoutLoginSuccess),
+      getName(MessageEnum.SessionSaveMessage),
+      getName(MessageEnum.NavigationPayLoadMessage),
+      getName(MessageEnum.SessionResponseMessage),
+      getName(MessageEnum.RestAPIResponceMessage),
+      getName(MessageEnum.LayoutDataMessage),
+      getName(MessageEnum.AccountTypeInfoMessage)
+    ];
+    // Customizable Area End
+
+    // Customizable Area Start
+    this.pageAdapter = new PageContainerWebAdapter();
+
+    this.state = {
+      open: false,
+      settingsOpened: false,
+      marketingOpened: false,
+      customerOpened: false,
+      generalSettingsOpened: false,
+      isHardwareOpen: false,
+      tokenReady: false,
+      pinned: false,
+      sidebarDropdown: {
+        store: false,
+        settings: false,
+        general: false,
+        products: false,
+        marketing: false,
+        customer: false,
+        homeCleanProduct: false,
+        hardware: false
+      },
+      searchText: "",
+      activeMenu: window.location.pathname,
+      userShortName: "NA",
+      isInnerProductsOpen: false,
+      isHomeCleanProductOpen: false,
+      isInnerOrderOpen: false,
+      isB2bActive: false,
+      isInnerB2BSettingsOpen: false
+    };
+    // Customizable Area End
+    runEngine.attachBuildingBlock(this as IBlock, this.subScribedMessages);
+
+    // Customizable Area Start
+    // Customizable Area End
+  }
+
+  async receive(from: string, message: Message) {
+    runEngine.debugLog("Message Recived", message);
+    // Customizable Area Start
+    this.receiveDataFromLayout(message)
+    this.receiveAccountTypeInfo(message)
+    // Customizable Area End
+  }
+
+  async componentDidMount() {
+    super.componentDidMount();
+    // Customizable Area Start
+    const token = await getStorageData("token");
+    if (!token) {
+      this.handleNavigateTo("EmailAccountLoginPage");
+    }
+    this.handlePinCheck();
+    this.handleOpenCheck();
+    this.handlePageOpend();
+    this.handleStorageSet();
+    // Customizable Area End
+  }
+
+  // Customizable Area Start
+  receiveAccountTypeInfo = (message: Message) => {
+    if (message.id === getName(MessageEnum.AccountTypeInfoMessage)) {
+      const recievedData = message.getData(
+        getName(MessageEnum.AccountTypeInfoData)
+      );
+      if (recievedData.accountType) {
+        this.setState({ isB2bActive: recievedData.isB2bActive })
+      }
+    }
+  }
+
+  receiveDataFromLayout = (message: Message) => {
+    if (message.id === getName(MessageEnum.LayoutDataMessage)) {
+      const recievedData = message.getData(
+        getName(MessageEnum.LayoutMessageData)
+      );
+      if (recievedData.userContext) {
+        this.setState({ myUser: recievedData.userContext.user })
+      }
+    }
+  }
+
+  sendPrintAction = (action: "SCAN_FILES" | "LOG_OUT", payload?: string[]) => {
+    const message = new Message(getCustomEnumName(CustomEnums.CustomActionReducers))
+    message.addData(getCustomEnumName(CustomEnums.CustomReducerAction), action)
+    payload && message.addData(getCustomEnumName(CustomEnums.CustomReducerPayload), payload.filter(Boolean))
+    this.send(message)
+    shouldScanFile = action === "LOG_OUT"
+  }
+
+  handleStorageSet = async () => {
+    const userName = await getStorageData(configJSON.userShortNameKey);
+    const tokenReady = !!(await getStorageData(configJSON.tokenKey));
+    this.setState({
+      userShortName: userName,
+      tokenReady: tokenReady,
+    });
+  };
+
+  handlePinCheck = async () => {
+    let pinnedCheck = JSON.parse(await getStorageData("isPinned"));
+    if (pinnedCheck) {
+      this.setState({ pinned: true });
+    } else {
+      this.setState({ pinned: false });
+    }
+  };
+
+  handleOpenCheck = async () => {
+    const storeIsOpen = JSON.parse(await getStorageData("isOpen"));
+    if (storeIsOpen) {
+      this.setState({ open: true });
+    } else {
+      this.setState({ open: false });
+    }
+  };
+
+  handlePageOpend = async () => {
+    const sidebarDropdownCheck = await getStorageData("sidebarDropdown", true);
+    let sidebarStoreValue,
+      sidebarSettingsValue,
+      sidebarGeneralValue,
+      sidebarProductsValue,
+      sideBarHomeCleanProductValue,
+      sidebarMarketinglValue,
+      sidebarCustomerValue,
+      sideBarHardwareValue;
+    try {
+      sidebarStoreValue = sidebarDropdownCheck?.store;
+      sidebarSettingsValue = sidebarDropdownCheck?.settings;
+      sidebarGeneralValue = sidebarDropdownCheck?.general;
+      sidebarProductsValue = sidebarDropdownCheck?.products;
+      sidebarMarketinglValue = sidebarDropdownCheck?.marketing;
+      sidebarCustomerValue = sidebarDropdownCheck?.customer;
+      sideBarHomeCleanProductValue = sidebarDropdownCheck?.homeCleanProduct;
+      sideBarHardwareValue = sidebarDropdownCheck?.hardware
+    } catch (error) {
+      sidebarStoreValue = false;
+      sidebarSettingsValue = false;
+      sidebarGeneralValue = false;
+      sidebarProductsValue = false;
+      sidebarMarketinglValue = false;
+      sidebarCustomerValue = false;
+      sideBarHomeCleanProductValue = false;
+      sideBarHardwareValue = false;
+    }
+    this.setState({
+      settingsOpened: sidebarSettingsValue,
+      marketingOpened: sidebarMarketinglValue,
+      customerOpened: sidebarCustomerValue,
+      generalSettingsOpened: sidebarGeneralValue,
+      isInnerProductsOpen: sidebarProductsValue,
+      isHomeCleanProductOpen: sideBarHomeCleanProductValue,
+      isInnerOrderOpen: sidebarStoreValue,
+      isHardwareOpen: sideBarHardwareValue
+    });
+  };
+
+  componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<S>) {
+    if (prevState.open !== this.state.open) {
+      if (this.props.onOpenedChanged) {
+        this.props.onOpenedChanged(this.state.open);
+      }
+    }
+
+    if (prevProps.navigation?.location.pathname !== this.props.navigation?.location.pathname) {
+      this.setState({
+        activeMenu: this.props.navigation?.location.pathname as string
+      })
+    }
+
+  }
+
+  checkPermission = (permission?: PermissionName, additionalPermissions?: PermissionName[], subGroupReqPermission?: string) => {
+    if (!permission) {
+      return true;
+    } else {
+      return (
+        // if main permission is false then check for additional permission
+        this.state.myUser &&
+          this.state.myUser.attributes.permission_groups.some(
+            (item) => item.permitted && item.name === permission
+          )
+          ?
+          true :
+          this.state.myUser &&
+          this.state.myUser.attributes.permission_groups.some(
+            (item) => item.permitted && additionalPermissions?.includes(item.name)
+          )
+      ) && (subGroupReqPermission ? this.isSubgroupPermitted(subGroupReqPermission, permission) : true)
+    }
+  };
+
+  isSubgroupPermitted(subGroupName: string, permission: PermissionName) {
+    const permissionObj = this.state.myUser && this.state.myUser.attributes.permission_groups.find(item => item.name === permission);
+    if (permissionObj) {
+      const subGroup = permissionObj.permission_sub_groups.find(subGroup => subGroup.sub_group_key === subGroupName);
+      return subGroup ? subGroup.permitted : false;
+    }
+    return false;
+  }
+
+  handlePermission = (permission?: PermissionName, additionalRequiredPermissions?: PermissionName[], subGroupReqPermission?: string) => {
+    const permitted = this.checkPermission(permission, additionalRequiredPermissions, subGroupReqPermission);
+    return permitted;
+  };
+
+  handleGetMenuItemsPermission = (leval2MenuItems: IMenuItems[], leval3MenuItems: IMenuItems[]) => {
+    
+    let isAnyLeval3MenuItemIsPermitted: boolean | undefined = false;
+    let isAnyLeval2MenuItemIsPermitted: boolean | undefined = false;
+
+    // leval3 permssion submenu
+    if (leval3MenuItems?.length) {
+      const leval3menuItemsPermission = leval3MenuItems.map((item: IMenuItems) => item[4]);
+
+      const leval3MenuItemsPermissionListFromApi =
+        this.state.myUser &&
+        this.state.myUser.attributes.permission_groups.filter(
+          (item) => leval3menuItemsPermission.includes(item.name)
+        );
+      isAnyLeval3MenuItemIsPermitted = leval3MenuItemsPermissionListFromApi?.some(menuPermission => menuPermission.permitted);
+    }
+
+    // leval2 permssion submenu
+    if (leval2MenuItems?.length) {
+      let leval2menuItemsPermission: (PermissionName | undefined)[] = leval2MenuItems.map((item: IMenuItems) => item[4]);
+      // if any MenuItems has additional permission then it's present at 5th index
+      leval2MenuItems.forEach((item: IMenuItems) => {
+        if (item[5]?.length) {
+          leval2menuItemsPermission = [...leval2menuItemsPermission, ...item[5]];
+        };
+      });
+
+      const leval2MenuItemsPermissionListFromApi =
+        this.state.myUser &&
+        this.state.myUser.attributes.permission_groups.filter(
+          (item) => leval2menuItemsPermission.includes(item.name)
+        );
+      isAnyLeval2MenuItemIsPermitted = leval2MenuItemsPermissionListFromApi?.some(menuPermission => menuPermission.permitted);
+
+      // when leval 3 menu is true but leval 2 permission is false then also leval 2 should true
+      isAnyLeval2MenuItemIsPermitted = isAnyLeval3MenuItemIsPermitted ? true : isAnyLeval2MenuItemIsPermitted;
+    }
+
+    return { isAnyLeval2MenuItemIsPermitted, isAnyLeval3MenuItemIsPermitted }
+  }
+
+  getPermissions = () => {
+    return this.state.myUser
+      ? this.state.myUser.attributes.permission_groups
+        .filter((item) => item.permitted)
+        .map((item) => item.name)
+      : [];
+  };
+
+  handleOpenSidebarDropdown = async (dropdownValue: string) => {
+    type DropdownMapping = {
+      [key: string]: { [key: string]: boolean };
+    };
+
+    const dropdownMapping: DropdownMapping = {
+      StoreManage: { store: true },
+      Setting: { settings: true },
+      General: { settings: true, general: true },
+      Marketing: { marketing: true },
+      Customer: { marketing: true, customer: true },
+      Products: { products: true },
+      homeCleanProduct: { homeCleanProduct: true },
+      Hardware: { hardware: true }
+    };
+
+    const newDropdownValue = {
+      ...this.state.sidebarDropdown,
+      ...dropdownMapping[dropdownValue],
+    };
+
+    this.setState({ sidebarDropdown: newDropdownValue });
+    await setStorageData("sidebarDropdown", JSON.stringify(newDropdownValue));
+  };
+
+  getConditionBased(
+    flag: boolean,
+    trueValue: React.ReactNode,
+    falseValue: React.ReactNode
+  ) {
+    return flag ? trueValue : falseValue;
+  }
+
+  handleProductsInnerItems = () => {
+    this.setState({ isInnerProductsOpen: !this.state.isInnerProductsOpen });
+  };
+
+  handleHomeCleanProduct = () => {
+    this.setState({
+      isHomeCleanProductOpen: !this.state.isHomeCleanProductOpen,
+    });
+  };
+
+  handleOrdersInnerItems = () => {
+    this.setState({ isInnerOrderOpen: !this.state.isInnerOrderOpen });
+  };
+
+  handleSettingsClick = () => {
+    this.setState({ settingsOpened: !this.state.settingsOpened });
+  };
+
+  handleGeneralSettingsClick = () => {
+    this.setState({ generalSettingsOpened: !this.state.generalSettingsOpened });
+  };
+
+  handleMarketingClick = () => {
+    this.setState({ marketingOpened: !this.state.marketingOpened });
+  };
+
+  handleGeneralCustomerClick = () => {
+    this.setState({ customerOpened: !this.state.customerOpened });
+  };
+
+  handleHardwareClick = () => {
+    this.setState({ isHardwareOpen: !this.state.isHardwareOpen });
+  };
+
+  handleClose = () => {
+    this.setState({ open: false });
+  };
+
+  handleOpen = () => {
+    this.setState({ open: true });
+  };
+
+  handlePinSidebar = async () => {
+    this.setState({ pinned: !this.state.pinned }, async () => {
+      await setStorageData("isPinned", JSON.stringify(this.state.pinned));
+      const isOpen = !this.state.pinned
+        ? JSON.stringify(false)
+        : JSON.stringify(this.state.open);
+      await setStorageData("isOpen", isOpen);
+    });
+  };
+
+  handleNavigateTo(route: string) {
+    const navigateMsg: Message = new Message(
+      getCustomEnumName(CustomEnums.PageContainerNavigateMessage)
+    );
+    navigateMsg.addData(getName(MessageEnum.NavigationTargetMessage), route);
+    navigateMsg.addData(
+      getName(MessageEnum.NavigationPropsMessage),
+      this.props
+    );
+    this.send(navigateMsg);
+  }
+
+  handleLogout = () => {
+    this.sendPrintAction("LOG_OUT");
+    removeStorageData(configJSON.tokenKey);
+    removeStorageData("sidebarDropdown");
+    this.handleNavigateTo("EmailAccountLoginPage");
+  };
+
+  getClassName(flag: boolean, trueValue: string, falseValue: string) {
+    return flag ? trueValue : falseValue;
+  }
+
+  checkIsUserUndefined(user: IMyUser | undefined) {
+    if (user !== undefined) {
+      return user.attributes.last_name;
+    } else {
+      return "";
+    }
+  }
+
+  renderUserName(user: IMyUser | undefined) {
+    if (user) {
+      return user.attributes.first_name;
+    } else {
+      return "" + " " + this.checkIsUserUndefined(user);
+    }
+  }
+
+  checkIsActiveRoute(route: string) {
+    const { activeMenu } = this.state;
+    return activeMenu
+      .toLocaleLowerCase()
+      .replace("-", "")
+      .includes(route.toLocaleLowerCase());
+  }
+
+  handleCheckIncluseRoute(route: string) {
+    const { activeMenu } = this.state;
+    return activeMenu.includes(route);
+  }
+
+
+  withPermissionAndRouteCheck = (renderFunction: Function) => {
+    return (
+      icon: string,
+      text: string,
+      route: string,
+      outerMenuName: string,
+      requiredPermission: PermissionName | undefined,
+      additionalRequiredPermissions?: PermissionName[],
+      subGroupReqPermission?: string
+    ) => {
+      const isPermissions = this.handlePermission(requiredPermission, additionalRequiredPermissions, subGroupReqPermission);
+      if (!isPermissions) {
+        return;
+      } else {
+        const isRouteActive = this.checkIsActiveRoute(route);
+        return renderFunction.call(this, {
+          icon,
+          text,
+          route,
+          outerMenuName,
+          isRouteActive,
+        });
+      }
+    };
+  };
+
+  beforeRenderProducts = (renderFunction: Function) => {
+    return (MenuItems: IMenuItems[]) => {
+      if(this.state.isB2bActive) return;
+      const isActive = this.handleCheckIncluseRoute("Products");
+      const { isAnyLeval2MenuItemIsPermitted, isAnyLeval3MenuItemIsPermitted } = this.handleGetMenuItemsPermission(MenuItems, []);
+      return renderFunction.call(this, {
+        MenuItems,
+        isActive,
+        isAnyLeval2MenuItemIsPermitted,
+        isAnyLeval3MenuItemIsPermitted
+      });
+    };
+  };
+
+  beforeRenderOrders = (renderFunction: Function) => {
+    return (storeMenuItems: IMenuItems[]) => {
+      if (this.state.isB2bActive) return;
+      const isActive = this.handleCheckIncluseRoute("StoreManage");
+      const { isAnyLeval2MenuItemIsPermitted, isAnyLeval3MenuItemIsPermitted } = this.handleGetMenuItemsPermission(storeMenuItems, []);
+      return renderFunction.call(this, {
+        storeMenuItems,
+        isActive,
+        isAnyLeval2MenuItemIsPermitted,
+        isAnyLeval3MenuItemIsPermitted
+      });
+    };
+  };
+
+  beforeRenderSettings =
+    (renderFunction: Function) =>
+      (settingsMenuItems: IMenuItems[], generalMenuItems: IMenuItems[]) => {
+        if(this.state.isB2bActive) return;
+        const isActive = this.handleCheckIncluseRoute("Settings-");
+        const isGeneralActive = this.handleCheckIncluseRoute("General");
+        const { isAnyLeval2MenuItemIsPermitted, isAnyLeval3MenuItemIsPermitted } = this.handleGetMenuItemsPermission(settingsMenuItems, generalMenuItems);
+        return renderFunction.call(this, {
+          settingsMenuItems,
+          generalMenuItems,
+          isActive,
+          isGeneralActive,
+          isAnyLeval2MenuItemIsPermitted,
+          isAnyLeval3MenuItemIsPermitted
+        });
+      };
+
+  beforeRenderMarketing =
+    (renderFunction: Function) =>
+      (marketingMenuItems: IMenuItems[], customerMenuItems: IMenuItems[]) => {
+        if(this.state.isB2bActive) return;
+        const isActive = this.handleCheckIncluseRoute("Marketing");
+        const isCustomerActive = this.handleCheckIncluseRoute("Customer");
+        const { isAnyLeval2MenuItemIsPermitted, isAnyLeval3MenuItemIsPermitted } = this.handleGetMenuItemsPermission(marketingMenuItems, customerMenuItems);
+        return renderFunction.call(this, {
+          marketingMenuItems,
+          customerMenuItems,
+          isActive,
+          isCustomerActive,
+          isAnyLeval2MenuItemIsPermitted,
+          isAnyLeval3MenuItemIsPermitted
+        });
+      };
+
+  withPlantPermission = (renderFunction: Function) => () => {
+    if(this.state.isB2bActive) return;
+    this.handlePermission("Plant Order Management");
+    return renderFunction.call(this);
+  };
+
+  beforeRenderSearch = (renderFunction: Function) => () => {
+    this.handlePermission("Plant Order Management");
+    const isActive = this.handleCheckIncluseRoute("AdvancedSearch");
+    return renderFunction.call(this, isActive);
+  }
+
+  beforeRenderReports = (renderFunction: Function) => () => {
+    if(this.state.isB2bActive) return;
+    const isActive = this.handleCheckIncluseRoute("SalesReporting");
+    return renderFunction.call(this, isActive);
+  }
+
+  beforeRenderCashier = (renderFunction: Function) => () => {
+    if(this.state.isB2bActive) return;
+    const isPermited = this.handlePermission("Cashier");
+    if (!isPermited) return;
+    const isActive = this.handleCheckIncluseRoute("cashier");
+    return renderFunction.call(this, isActive, "Cashier", "CfCashier");
+  }
+
+  beforeRenderStoreKeeper = (renderFunction: Function) => () => {
+    if(this.state.isB2bActive) return;
+    const isPermited = this.handlePermission("Cashup");
+    if (!isPermited) return;
+    const isActive = this.handleCheckIncluseRoute("cashup");
+    return renderFunction.call(this, isActive, "Cashup", "StoreKeeper");
+  }
+
+  beforeRenderZatca = (renderFunction: Function) => () => {
+    if(this.state.isB2bActive) return;
+    const isPermissions = this.handlePermission("Order", [], "zatca_logs_access");
+    if (!isPermissions) return;
+    const isActive = this.handleCheckIncluseRoute("ZatcaHistory");
+    return renderFunction.call(this, isActive, "Zatca History", "ZatcaHistory");
+  }
+
+
+  handleNavigationForDashboard = () => {
+    const redirectToDashboardtab = redirectToDashboardTabBasedOnPermission(this.state.myUser?.attributes.permission_groups as PermissionGroupArray[])
+    this.handleNavigateTo(redirectToDashboardtab);
+  }
+
+  beforeRenderSettingsForB2B =
+    (renderFunction: Function) =>
+      (settingsMenuItems: IMenuItems[], generalMenuItems: IMenuItems[]) => {
+        if(!this.state.isB2bActive) return;
+        const isActive = this.handleCheckIncluseRoute("Settings-");
+        const isGeneralActive = this.handleCheckIncluseRoute("General");
+        const { isAnyLeval2MenuItemIsPermitted, isAnyLeval3MenuItemIsPermitted } = this.handleGetMenuItemsPermission(settingsMenuItems, generalMenuItems);
+        return renderFunction.call(this, {
+          settingsMenuItems,
+          generalMenuItems,
+          isActive,
+          isGeneralActive,
+          isAnyLeval2MenuItemIsPermitted,
+          isAnyLeval3MenuItemIsPermitted
+        });
+      };
+
+  beforeRenderB2BSettings = (renderFunction: Function) => {
+    return (MenuItems: IMenuItems[]) => {
+      if (!this.state.isB2bActive) return;
+      const isActive = this.handleCheckIncluseRoute("B2BSettings");
+      const { isAnyLeval2MenuItemIsPermitted, isAnyLeval3MenuItemIsPermitted } = this.handleGetMenuItemsPermission(MenuItems, []);
+      return renderFunction.call(this, {
+        MenuItems,
+        isActive,
+        isAnyLeval2MenuItemIsPermitted,
+        isAnyLeval3MenuItemIsPermitted
+      });
+    };
+  };
+
+  handleB2BSettingsInnerItems = () => {
+    this.setState({ isInnerB2BSettingsOpen: !this.state.isInnerB2BSettingsOpen });
+  };
+
+  // Customizable Area End
+}

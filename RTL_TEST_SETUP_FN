@@ -1,0 +1,36 @@
+import RestApiBlock from "../../../../framework/src/Blocks/RestApiClientBlock";
+
+const baseURL = require("../../../../framework/src/config.js").baseURL;
+
+export interface IRequest extends RequestInit {
+  url: string;
+  headers: {
+    [field: string]: string;
+  };
+}
+
+const defaultResponse = {
+  status: "200",
+  message: "Mock Response is not Configured!",
+};
+const initializeMockResponse = (
+  getMockResponse: (
+    request: IRequest
+  ) => string | null | undefined | never | object
+) => {
+  global.fetch = function() {
+    const input: RequestInfo | URL | string = arguments[0];
+    const init: RequestInit | undefined = arguments[1];
+    const url = String(input).replace(baseURL, "");
+    const prepared = init || {};
+    const data = { url, ...prepared };
+    const jsonResponse = getMockResponse(data as IRequest) || defaultResponse;
+    const response = new window.Response();
+    response.json = () => Promise.resolve(jsonResponse);
+    return Promise.resolve(response);
+  };
+};
+
+RestApiBlock.getInstance();
+
+export default initializeMockResponse;

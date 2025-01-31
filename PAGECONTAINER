@@ -1,0 +1,1213 @@
+import React from "react";
+
+// Customizable Area Start
+import {
+  Box,
+  Button,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  IconButton,
+  Tooltip,
+  styled,
+  StyledComponentProps,
+} from "@material-ui/core";
+import { withStyles } from "@material-ui/core/styles";
+import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import ExitToAppOutlinedIcon from "@material-ui/icons/ExitToAppOutlined";
+import Person from "@material-ui/icons/Person";
+import {
+  dashboardIcon,
+  settingsIcon,
+  generalIcon,
+  ProductsIcon,
+  StoreIcon,
+  pushPinIcon,
+  marketingIcon,
+  SearchIconDrawer,
+  PlantOrderIcon,
+  ExpandIcon,
+  HomeCleanIcon,
+  CashierIcon,
+  ReportIcon,
+  HardwareIcon,
+  logoIcon,b2bSettingsIcon
+} from "./assets";
+// Customizable Area End
+
+// Customizable Area Start
+import {
+  IMenuItems,
+  customerModuleMenuItems,
+  generalModuleMenuItems,
+  hardwareModuleMenuItems,
+  homeCleanMenuItems,
+  marketingModuleMenuItems,
+  productsModuleMenuItems,
+  settingMenuItems,
+  storeModuleMenuItems,
+  b2bSettingMenuItems,
+  B2bGeneralModuleMenuItems,
+  B2bsettingMenuItems
+} from "./utils";
+import { colors } from "../../../blocks/utilities/src/Colors";
+import SideBarController, {
+    Props,
+    configJSON,
+  } from "./SideBarController.web";
+const Strings = configJSON.Strings.pageContainer;
+interface StyledDrawerResProps {
+  responsive?: {
+    "1024":string,
+    "1280":string,
+    "1366":string
+  }
+}
+
+// Customizable Area End
+
+export class SideBarComp extends SideBarController {
+  constructor(props: Props) {
+    super(props);
+    // Customizable Area Start
+    // Customizable Area End
+  }
+
+  // Customizable Area Start
+  expandLessIcon() {
+    return <img src={ExpandIcon} width={24} height={24} className={"rotate-180"} />;
+  }
+
+  expandMoreIcon() {
+    return <img src={ExpandIcon} width={24} height={24}/>;
+  }
+
+  renderDrwaerTooltip(text: string, icon: string) {
+    return (
+      <DrawerBarTooltip title={text} placement={"right-start"} arrow>
+        <MenuItemIconClose className={"menuItemIcononClose"}>
+          <img className={"imageClose"} src={icon} width={24} height={24}/>
+        </MenuItemIconClose>
+      </DrawerBarTooltip>
+    );
+  }
+
+  renderMenuItem(text: string, icon: string) {
+    return (
+      <>
+        <MenuItemIcon className={"menuItemIcon"}>
+          <img src={icon} width={24} height={24}/>
+        </MenuItemIcon>
+        <ListItemTextMain primary={text} className={"menuItemText"} />
+      </>
+    );
+  }
+
+  renderLevel3Menu = ({
+    icon,
+    text,
+    route,
+    outerMenuName,
+    isRouteActive,
+  }: {
+    icon: string;
+    text: string;
+    route: string;
+    outerMenuName: string;
+    isRouteActive: boolean;
+  }) => {
+    const { open } = this.state;
+    return (
+      <ListItemLevel3
+        className={this.getClassName(
+          open,
+          `menuItem3 ${isRouteActive && "activeRoute"}`,
+          `closemenuItem3 ${isRouteActive && "activeRoute"}`
+        )}
+        button
+        data-test-id={`listlevel3Menu-${route}`}
+        onClick={() => {
+          this.handleNavigateTo(route);
+          this.handleOpenSidebarDropdown(outerMenuName);
+        }}
+      >
+        {this.getConditionBased(
+          open,
+          this.renderMenuItem(text, icon),
+          this.renderDrwaerTooltip(text, icon)
+        )}
+      </ListItemLevel3>
+    );
+  };
+
+  renderLevel2Menu = ({
+    icon,
+    text,
+    route,
+    outerMenuName,
+    isRouteActive,
+  }: {
+    icon: string;
+    text: string;
+    route: string;
+    outerMenuName: string;
+    isRouteActive: boolean;
+  }) => {
+    const { open } = this.state;
+    return (
+      <ListItemLevel2
+        className={this.getClassName(
+          open,
+          `menuItem2 ${isRouteActive && "activeRoute"}`,
+          `closeMenuItem2 ${isRouteActive && "activeRoute"}`
+        )}
+        button
+        data-test-id={`level2ItemsMenu-${route}`}
+        onClick={() => {
+          this.handleNavigateTo(route);
+          this.handleOpenSidebarDropdown(outerMenuName);
+        }}
+      >
+        {this.getConditionBased(
+          open,
+          this.renderMenuItem(text, icon),
+          this.renderDrwaerTooltip(text, icon)
+        )}
+      </ListItemLevel2>
+    );
+  };
+
+  renderHomeClean(MenuItems: IMenuItems[]) {
+    const {isAnyLeval2MenuItemIsPermitted} = this.handleGetMenuItemsPermission(MenuItems,[]);
+    const { open, isHomeCleanProductOpen, activeMenu } = this.state;
+    const isActive = activeMenu === "/HomeCleaningProductList";
+    return (
+      <>
+        {
+          this.getConditionBased(
+            isAnyLeval2MenuItemIsPermitted as boolean,
+            <RenderListItem
+              button
+              onClick={this.handleHomeCleanProduct}
+              id={"homeCleanList"}
+              data-test-id={"homeCleanList"}
+              className={this.getClassName(
+                open,
+                `menuItem1 ${isActive && "activeRoute"}`,
+                `closeMenuItem ${isActive && "activeRoute"}`
+              )}
+            >
+              {this.getConditionBased(
+                open,
+                <>
+                  {this.renderMenuItem("Home Cleaning", HomeCleanIcon)}
+                  {isHomeCleanProductOpen
+                    ? this.expandLessIcon()
+                    : this.expandMoreIcon()}
+                </>,
+                this.renderDrwaerTooltip("Home Cleaning", HomeCleanIcon)
+              )}
+            </RenderListItem>,
+            <></>
+          )
+        }
+
+        {isHomeCleanProductOpen && (
+          <>
+            {MenuItems.map((item) =>
+              this.withPermissionAndRouteCheck(this.renderLevel2Menu)(
+                item[0] as string,
+                item[1],
+                item[2],
+                item[3],
+                item[4]
+              )
+            )}
+          </>
+        )}
+      </>
+    );
+  }
+
+  renderProducts = ({
+    MenuItems,
+    isActive,
+    isAnyLeval2MenuItemIsPermitted,
+    isAnyLeval3MenuItemIsPermitted
+  }: {
+    MenuItems: IMenuItems[];
+    isActive: boolean;
+    isAnyLeval2MenuItemIsPermitted: boolean;
+    isAnyLeval3MenuItemIsPermitted: boolean;
+  }) => {
+    const { open, isInnerProductsOpen } = this.state;
+    return (
+      <>
+        {
+          this.getConditionBased(
+            isAnyLeval2MenuItemIsPermitted,
+            <RenderListItem
+              button
+              onClick={this.handleProductsInnerItems}
+              data-test-id={"renderProducts"}
+              className={this.getClassName(
+                open,
+                `menuItem1 ${isActive && "activeRoute"}`,
+                `closeMenuItem ${isActive && "activeRoute"}`
+              )}
+            >
+              {this.getConditionBased(
+                open,
+                <>
+                  {this.renderMenuItem("Products", ProductsIcon)}
+                  {isInnerProductsOpen
+                    ? this.expandLessIcon()
+                    : this.expandMoreIcon()}
+                </>,
+                this.renderDrwaerTooltip("Products", ProductsIcon)
+              )}
+            </RenderListItem>,
+            <></>
+          )
+        }
+        
+        {isInnerProductsOpen && (
+          <>
+            {MenuItems.map((item) =>
+              this.withPermissionAndRouteCheck(this.renderLevel2Menu)(
+                item[0] as string,
+                item[1],
+                item[2],
+                item[3],
+                item[4]
+              )
+            )}
+          </>
+        )}
+      </>
+    );
+  };
+
+  renderOrders = ({
+    storeMenuItems,
+    isActive,
+    isAnyLeval2MenuItemIsPermitted,
+    isAnyLeval3MenuItemIsPermitted
+  }: {
+    storeMenuItems: IMenuItems[];
+    isActive: boolean;
+    isAnyLeval2MenuItemIsPermitted: boolean;
+    isAnyLeval3MenuItemIsPermitted: boolean;
+  }) => {
+    const { open, isInnerOrderOpen } = this.state;
+    return (
+      <>
+        {
+          this.getConditionBased(
+            isAnyLeval2MenuItemIsPermitted,
+            <RenderListItem
+              button
+              onClick={this.handleOrdersInnerItems}
+              id={"orderItemList"}
+              data-test-id={"orderItemList"}
+              className={this.getClassName(
+                open,
+                `menuItem1 ${isActive && "activeRoute"}`,
+                `closeMenuItem ${isActive && "activeRoute"}`
+              )}
+            >
+              {this.getConditionBased(
+                open,
+                <>
+                  {this.renderMenuItem("Store", StoreIcon)}
+                  {isInnerOrderOpen ? this.expandLessIcon() : this.expandMoreIcon()}
+                </>,
+                this.renderDrwaerTooltip("Store", ProductsIcon)
+              )}
+            </RenderListItem>,
+            <></>
+          )
+        }
+        {isInnerOrderOpen && (
+          <>
+            {storeMenuItems.map((item) =>
+              this.withPermissionAndRouteCheck(this.renderLevel2Menu)(
+                item[0] as string,
+                item[1],
+                item[2],
+                item[3],
+                item[4],
+                item[5],
+                item[6] as string
+              )
+            )}
+          </>
+        )}
+      </>
+    );
+  };
+
+  renderSettings = ({
+    settingsMenuItems,
+    generalMenuItems,
+    isActive,
+    isGeneralActive,
+    isAnyLeval2MenuItemIsPermitted,
+    isAnyLeval3MenuItemIsPermitted
+  }: {
+    settingsMenuItems: IMenuItems[];
+    generalMenuItems: IMenuItems[];
+    isActive: boolean;
+    isGeneralActive: boolean;
+    isAnyLeval2MenuItemIsPermitted: boolean;
+    isAnyLeval3MenuItemIsPermitted: boolean;
+  }) => {
+    const { open, settingsOpened, generalSettingsOpened } = this.state;
+    return (
+      <>
+        {
+          this.getConditionBased(
+            isAnyLeval2MenuItemIsPermitted,
+            <RenderListItem
+              button
+              data-test-id={"settingList"}
+              onClick={this.handleSettingsClick}
+              className={this.getClassName(
+                open,
+                `menuItem1 ${isActive && "activeRoute"}`,
+                `closeMenuItem ${isActive && "activeRoute"}`
+              )}
+            >
+              {this.getConditionBased(
+                open,
+                <>
+                  {this.renderMenuItem("Setting", settingsIcon)}
+                  {settingsOpened ? this.expandLessIcon() : this.expandMoreIcon()}
+                </>,
+                this.renderDrwaerTooltip("Setting", settingsIcon)
+              )}
+            </RenderListItem>,
+            <></>
+          )
+        }
+        
+        {this.getConditionBased(
+          settingsOpened,
+          <>
+            {settingsMenuItems.map((item) =>
+              this.withPermissionAndRouteCheck(this.renderLevel2Menu)(
+                item[0] as string,
+                item[1],
+                item[2],
+                item[3],
+                item[4]
+              )
+            )}
+
+            {
+              this.getConditionBased(
+                isAnyLeval3MenuItemIsPermitted,
+                <RenderListItem
+                  className={this.getClassName(
+                    open,
+                    `menuItem2 ${isGeneralActive && "activeRoute"}`,
+                    `closeMenuItem2 ${isGeneralActive && "activeRoute"}`
+                  )}
+                  button
+                  data-test-id={"generalMenuList"}
+                  onClick={() => this.handleGeneralSettingsClick()}
+                >
+                  {this.getConditionBased(
+                    open,
+                    <>
+                      {this.renderMenuItem("General", generalIcon)}
+                      {generalSettingsOpened
+                        ? this.expandLessIcon()
+                        : this.expandMoreIcon()}
+                    </>,
+                    this.renderDrwaerTooltip("General", generalIcon)
+                  )}
+                </RenderListItem>,
+                <></>
+              )
+            }
+         
+            {generalSettingsOpened && (
+              <>
+                {generalMenuItems.map((item) =>
+                  this.withPermissionAndRouteCheck(this.renderLevel3Menu)(
+                    item[0] as string,
+                    item[1],
+                    item[2],
+                    item[3],
+                    item[4],
+                    item[5],
+                    item[6],
+                  )
+                )}
+              </>
+            )}
+          </>,
+          <></>
+        )}
+      </>
+    );
+  };
+
+  renderMarketing = ({
+    marketingMenuItems,
+    customerMenuItems,
+    isActive,
+    isCustomerActive,
+    isAnyLeval2MenuItemIsPermitted,
+    isAnyLeval3MenuItemIsPermitted
+  }: {
+    marketingMenuItems: IMenuItems[];
+    customerMenuItems: IMenuItems[];
+    isActive: boolean;
+    isCustomerActive: boolean;
+    isAnyLeval2MenuItemIsPermitted: boolean;
+    isAnyLeval3MenuItemIsPermitted: boolean;
+  }) => {
+    const { open, marketingOpened, customerOpened } = this.state;
+    return (
+      <>
+        {
+          this.getConditionBased(
+            isAnyLeval2MenuItemIsPermitted,
+            <RenderListItem
+              button
+              onClick={this.handleMarketingClick}
+              data-test-id={"marketingList"}
+              className={this.getClassName(
+                open,
+                `menuItem1 ${isActive && "activeRoute"}`,
+                `closeMenuItem ${isActive && "activeRoute"}`
+              )}
+            >
+              {this.getConditionBased(
+                open,
+                <>
+                  {this.renderMenuItem("Marketing", marketingIcon)}
+                  {marketingOpened ? this.expandLessIcon() : this.expandMoreIcon()}
+                </>,
+                this.renderDrwaerTooltip("Marketing", marketingIcon)
+              )}
+            </RenderListItem>,
+            <></>
+          )
+        }
+
+        {this.getConditionBased(
+          marketingOpened,
+          <>
+            {marketingMenuItems.map((item) =>
+              this.withPermissionAndRouteCheck(this.renderLevel2Menu)(
+                item[0] as string,
+                item[1],
+                item[2],
+                item[3],
+                item[4]
+              )
+            )}
+            <>
+            {
+              this.getConditionBased(
+                isAnyLeval3MenuItemIsPermitted,
+                <RenderListItem
+                  className={this.getClassName(
+                    open,
+                    `menuItem2 ${isCustomerActive && "activeRoute"}`,
+                    `closeMenuItem2 ${isCustomerActive && "activeRoute"}`
+                  )}
+                  button
+                  data-test-id={"customerMenuList"}
+                  onClick={() => this.handleGeneralCustomerClick()}
+                >
+                  {this.getConditionBased(
+                    open,
+                    <>
+                      <MenuItemIcon className={"menuItemIcon"}>
+                        <Person />
+                      </MenuItemIcon>
+                      <ListItemTextMain
+                        primary={"Customer"}
+                        className={"menuItemText"}
+                      />
+                      {customerOpened
+                        ? this.expandLessIcon()
+                        : this.expandMoreIcon()}
+                    </>,
+                    <DrawerBarTooltip
+                      title={"Customer"}
+                      placement={"right-start"}
+                      arrow
+                    >
+                      <Person />
+                    </DrawerBarTooltip>
+                  )}
+                </RenderListItem>,
+                <></>
+              )
+            }
+             
+              {customerOpened && (
+                <>
+                  {customerMenuItems.map((item) =>
+                    this.withPermissionAndRouteCheck(this.renderLevel3Menu)(
+                      item[0] as string,
+                      item[1],
+                      item[2],
+                      item[3],
+                      item[4]
+                    )
+                  )}
+                </>
+              )}
+            </>
+          </>,
+          <></>
+        )}
+      </>
+    );
+  };
+
+  renderPlant = () => {
+    const { open, activeMenu } = this.state;
+    const isPermissions = this.handlePermission("Plant management");
+    if(!isPermissions) {
+      return;
+    } else {
+      const isActive = activeMenu === "/Cfplantdashboard2";
+      return (
+        <RenderListItem
+          button
+          className={this.getClassName(
+            open,
+            `menuItem1 ${isActive && "activeRoute"}`,
+            `closeMenuItem ${isActive && "activeRoute"}`
+          )}
+          data-test-id={`plant-dashboard`}
+          onClick={() => this.handleNavigateTo("Cfplantdashboard2")}
+        >
+          {this.getConditionBased(
+            open,
+            this.renderMenuItem("Plant", PlantOrderIcon),
+            this.renderDrwaerTooltip("Plant", PlantOrderIcon)
+          )}
+        </RenderListItem>
+      );
+    }
+  };
+
+  renderZatcaHistory = (isActive: boolean, title: string, route: string) => {
+    const { open } = this.state;
+    
+    return (
+      <RenderListItem
+        button
+        className={this.getClassName(
+          open,
+          `menuItem1 ${isActive && "activeRoute"}`,
+          `closeMenuItem ${isActive && "activeRoute"}`
+        )}
+        data-test-id={`zatca-history`}
+        onClick={() => this.handleNavigateTo(route)}
+      >
+        {this.getConditionBased(
+          open,
+          this.renderMenuItem(title, PlantOrderIcon),
+          this.renderDrwaerTooltip(title, PlantOrderIcon)
+        )}
+      </RenderListItem>
+    );
+  };
+
+  renderDashboard = () => {
+    const isPermissions = this.handlePermission("Dashboard");
+    if (this.state.isB2bActive) return;
+    if(!isPermissions) {
+      return;
+    } else {
+      const { open } = this.state;
+      const isActive = this.handleCheckIncluseRoute("Dashboard-")
+      const activeClass = isActive ? " activeRoute" : ""
+
+      return (
+        <RenderListItem 
+          data-test-id="dashboard-page"
+          button 
+          className={open ? ("menuItem1" + activeClass) : "closeMenuItem"} 
+          onClick={() => this.handleNavigationForDashboard()}
+        >
+          {this.getConditionBased(
+            open,
+            this.renderMenuItem(configJSON.dashboard, dashboardIcon),
+            this.renderDrwaerTooltip(configJSON.dashboard, dashboardIcon)
+          )}
+        </RenderListItem>
+      );
+    }
+  };
+
+  renderReports = (isActive: boolean) => {
+    const isPermissions = this.handlePermission("Report Export");
+    if(!isPermissions) {
+      return;
+    } else {
+      const { open} = this.state;
+      return (
+        <RenderListItem button  onClick={() => this.handleNavigateTo('SalesReporting')} className={open ? `menuItem1 ${isActive && "activeRoute"}` : "closeMenuItem"}>
+          {this.getConditionBased(
+            open,
+            this.renderMenuItem("Reports", ReportIcon),
+            this.renderDrwaerTooltip("Reports", ReportIcon)
+          )}
+        </RenderListItem>
+      );
+    }
+  };
+
+  renderSearch = (isActive: boolean) => {
+    const { open } = this.state;
+    return (
+      <RenderListItem
+        button
+        data-test-id={"searchPage"}
+        className={this.getClassName(
+          open,
+          `menuItem1 ${isActive && "activeRoute"}`,
+          `closeMenuItem ${isActive && "activeRoute"}`
+        )}
+        onClick={() => this.handleNavigateTo("AdvancedSearch")}
+      >
+        {this.getConditionBased(
+          open,
+          this.renderMenuItem("Advance Search", SearchIconDrawer),
+          this.renderDrwaerTooltip("Advance Search", SearchIconDrawer)
+        )}
+      </RenderListItem>
+    );
+  };
+
+  renderCashierStorekeeper = (isActive: boolean, title: string, route: string) => {
+    const { open } = this.state;
+    return (
+      <RenderListItem
+        button
+        data-test-id={"cashierPage"}
+        onClick={() => this.handleNavigateTo(route)}
+        className={this.getClassName(
+          open,
+          `menuItem1 ${isActive && "activeRoute"}`,
+          `closeMenuItem ${isActive && "activeRoute"}`
+        )}
+      >
+        {this.getConditionBased(
+          open,
+          this.renderMenuItem(title, CashierIcon),
+          this.renderDrwaerTooltip(title, CashierIcon)
+        )}
+      </RenderListItem>
+    );
+  };
+
+  renderHardware = () => {
+    if(this.state.isB2bActive) return;
+    const isPermissions = this.handlePermission("Hardware");
+    if(!isPermissions) {
+      return;
+    } else {
+      const { open, isHardwareOpen } = this.state;
+      const isActive = this.handleCheckIncluseRoute("Hardware-");
+      return (
+        <>
+          <RenderListItem
+            button
+            onClick={this.handleHardwareClick}
+            id={"hardwareItemList"}
+            data-test-id={"hardwareItemList"}
+            className={this.getClassName(
+              open,
+              `menuItem1 ${isActive && "activeRoute"}`,
+              `closeMenuItem ${isActive && "activeRoute"}`
+            )}
+          >
+            {this.getConditionBased(
+              open,
+              <>
+                {this.renderMenuItem("Hardware", HardwareIcon)}
+                {isHardwareOpen ? this.expandLessIcon() : this.expandMoreIcon()}
+              </>,
+              this.renderDrwaerTooltip("Hardware", HardwareIcon)
+            )}
+          </RenderListItem>
+          {isHardwareOpen && (
+            <>
+            {hardwareModuleMenuItems.map((item) =>
+              this.withPermissionAndRouteCheck(this.renderLevel2Menu)(
+                item[0] as string,
+                item[1],
+                item[2],
+                item[3],
+                item[4],
+                item[5],
+                item[6]
+              )
+            )}
+            </>
+          )}
+        </>
+      );
+    }
+  };
+
+  renderB2BSettings = ({
+    MenuItems,
+    isActive,
+    isAnyLeval2MenuItemIsPermitted
+  }: {
+    MenuItems: IMenuItems[];
+    isActive: boolean;
+    isAnyLeval2MenuItemIsPermitted: boolean;
+  }) => {
+    const { open, isInnerB2BSettingsOpen } = this.state;
+    return (
+      <>
+        {
+          this.getConditionBased(
+            isAnyLeval2MenuItemIsPermitted,
+            <RenderListItem
+              button
+              onClick={this.handleB2BSettingsInnerItems}
+              data-test-id={configJSON.b2bMenuItemsTest}
+              className={this.getClassName(
+                open,
+                `menuItem1 ${isActive && "activeRoute"}`,
+                `closeMenuItem ${isActive && "activeRoute"}`
+              )}
+            >
+              {this.getConditionBased(
+                open,
+                <>
+                  {this.renderMenuItem("B2B Settings", b2bSettingsIcon)}
+                  {isInnerB2BSettingsOpen
+                    ? this.expandLessIcon()
+                    : this.expandMoreIcon()}
+                </>,
+                this.renderDrwaerTooltip("B2B Settings", b2bSettingsIcon)
+              )}
+            </RenderListItem>,
+            <></>
+          )
+        }
+        
+        {isInnerB2BSettingsOpen && (
+          <>
+            {MenuItems.map((item) =>
+              this.withPermissionAndRouteCheck(this.renderLevel2Menu)(
+                item[0] as string,
+                item[1],
+                item[2],
+                item[3],
+                item[4]
+              )
+            )}
+          </>
+        )}
+      </>
+    );
+  };
+
+  // Customizable Area End
+
+  render() {
+    // Customizable Area Start
+    const { open, pinned } = this.state;    
+    const logoStyle = open ? {
+      dimension: 60,
+      marginLeft: '0px',
+    } : {
+      dimension: 40,
+      marginLeft: '-13px',
+    };
+    return (
+        <DrawerWrapper>
+          <Drawer
+            variant={"permanent"}
+            className={open ? "drawerOpen" : "drawerClose"}
+            classes={{
+              paper: open ? "drawerOpen" : "drawerClose",
+            }}
+            PaperProps={{ style: { backgroundColor: "#204B9C" } }}
+          >
+            <div className="pinnedWrap">
+                <img data-test-id="company-logo" style={{ marginLeft: logoStyle.marginLeft}} src={logoIcon} alt={"pin icon"} width={logoStyle.dimension} height={logoStyle.dimension}/>
+            </div>
+            <div className={`pinnedWrap ${open ? "showPinned" : "hidePinned"}`}>
+              <div
+                className={pinned ? "pinnedSidebar" : "unpinnedSidebar"}
+                data-test-id={"pinnedBar"}
+                onClick={() => {
+                  this.handlePinSidebar();
+                }}
+              >
+                <img src={pushPinIcon} alt={"pin icon"} width={24} height={24}/>
+              </div>
+            </div>
+            <div className={"listwrapper"}>
+              <List className={"list"}>
+                {this.beforeRenderSearch(this.renderSearch)()}
+                {this.renderDashboard()}
+                {this.beforeRenderReports(this.renderReports)()}
+                {this.beforeRenderOrders(this.renderOrders)(
+                  storeModuleMenuItems
+                )}
+                {this.beforeRenderCashier(this.renderCashierStorekeeper)()}
+                {this.beforeRenderStoreKeeper(this.renderCashierStorekeeper)()}
+                {this.withPlantPermission(this.renderPlant)()}
+
+                {this.beforeRenderSettings(this.renderSettings)(
+                  settingMenuItems,
+                  generalModuleMenuItems
+                )}
+
+                {this.beforeRenderSettingsForB2B(this.renderSettings)(
+                  B2bsettingMenuItems,
+                  B2bGeneralModuleMenuItems
+                )}
+
+                {this.beforeRenderB2BSettings(this.renderB2BSettings)(
+                  b2bSettingMenuItems
+                )}
+
+                {this.beforeRenderMarketing(this.renderMarketing)(
+                  marketingModuleMenuItems,
+                  customerModuleMenuItems
+                )}
+                {this.beforeRenderProducts(this.renderProducts)(
+                  productsModuleMenuItems
+                )}
+                {this.renderHomeClean(homeCleanMenuItems)}
+                {this.renderHardware()}
+                {this.beforeRenderZatca(this.renderZatcaHistory)()}
+              </List>
+              <div className={open ? "btnwrapper" : "closeBtnWrapper"}>
+                {this.getConditionBased(
+                  open,
+                  <Button
+                    onClick={this.handleLogout}
+                    className={"button"}
+                    data-test-id={"logoutBtn"}
+                    startIcon={<ExitToAppOutlinedIcon />}
+                  >
+                    {Strings.logoutLabel}
+                  </Button>,
+                  <DrawerBarTooltip
+                    title={Strings.logoutLabel}
+                    placement={"right-start"}
+                    arrow
+                  >
+                    <MenuItemIconClose className={"menuItemIcononClose"}>
+                      <ExitToAppOutlinedIcon
+                        onClick={this.handleLogout}
+                        className={"menuItemIconLogout"}
+                      />
+                    </MenuItemIconClose>
+                  </DrawerBarTooltip>
+                )}
+              </div>
+            </div>
+          </Drawer>
+          {this.getConditionBased(
+            open,
+            <IconButton
+              className={`toggleMenuIcon opentoggleIcon`}
+              data-test-id={"menuIconButton"}
+              onClick={this.handleClose}
+              disabled={pinned}
+              >
+            <ChevronLeftIcon />
+            </IconButton>,
+            <IconButton
+            className={`toggleMenuIcon closeToggleIcon`}
+            data-test-id={"menuIconButton"}
+            disabled={pinned}
+            onClick={this.handleOpen}
+            >
+            <ChevronRightIcon />
+            </IconButton>
+          )}
+        </DrawerWrapper>
+    );
+    // Customizable Area End
+  }
+}
+
+// Customizable Area Start
+const DrawerBarTooltip = withStyles({
+  tooltip: {
+    fontSize: "13px",
+    color: "white",
+    backgroundColor: colors().black,
+  },
+  arrow: {
+    color: colors().black,
+  },
+})(Tooltip);
+
+const DrawerWrapper = styled(Box)((props: StyledComponentProps & StyledDrawerResProps) => ({
+  "& .pinnedWrap": {
+    margin: "30px 0 0px 30px",
+  },
+  "& .hidePinned": {
+    opacity: 0,
+  },
+  "& .showPinned": {
+    opacity: 1,
+  },
+  "& .menuItemIconLogout": {
+    color: colors().white,
+  },
+  "& .drawerOpen": {
+    transition: "width 300ms",
+    width: "252px",
+    "@media only screen and (max-width: 1366px)": {
+      width: props.responsive?.["1366"] ?  props?.responsive['1366'] : "252px",
+    },
+    "@media only screen and (max-width: 1280px)": {
+      width: props.responsive?.["1280"]  ? props?.responsive['1280'] : "252px",
+    },
+    "@media only screen and (max-width: 1024px)": {
+      width: props.responsive?.["1024"] ?  props?.responsive['1024'] : "192px",
+    },
+  
+  },
+  "& .drawerClose": {
+    transition: "width 300ms",
+    width: "72px",
+    overflowX: "hidden",
+  },
+  "& .btnwrapper": {
+    padding: 24,
+    marginTop: 50,
+    width: "100%",
+  },
+  "& .closeBtnWrapper": {
+    padding: 12,
+    marginTop: 50,
+    width: "100%",
+    textAlign: "center",
+  },
+  "& .rotate-180": {
+    transform: "rotate(180deg)",
+  },
+  "& .toggleMenuIcon": {
+    padding: 4,
+    background: colors().antiFlashWhite,
+    position: "fixed",
+    top: 155,
+    bottom: "auto",
+    right: "auto",
+    zIndex: 1200,
+    width: "32px",
+    height: "32px",
+    borderRadius: "10px",
+  },
+  "& .accountUserLogo": {
+    width: "100%",
+    height: "100%",
+  },
+  "& .activeUserIcon": {
+    width: "40px",
+    height: "40px",
+    backgroundColor: colors().Cultured,
+    textAlign: "center",
+    borderRadius: "20px",
+  },
+  "& .opentoggleIcon": {
+    transition: "left 300ms ease 0s",
+    left: "235px",
+    "@media only screen and (max-width: 1366px)": {
+      left: props.responsive?.["1366"] ?  "205px" : "235px",
+    },
+    "@media only screen and (max-width: 1280px)": {
+      left: props.responsive?.["1280"] ?  "195px" : "235px",
+    },
+    "@media only screen and (max-width: 1024px)": {
+      left: props.responsive?.["1024"] ?  "149px" : "176px",
+    },
+  },
+  "& .closeToggleIcon": {
+    transition: "left 300ms ease 0s",
+    left: "56px",
+  },
+  "& .pinnedSidebar": {
+    backgroundColor: colors().orange,
+    width: "32px",
+    minHeight: "32px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    border: `1px solid ${colors().orange}`,
+    borderRadius: "32px",
+    cursor: "pointer",
+  },
+  "& .unpinnedSidebar": {
+    width: "32px",
+    minHeight: "32px",
+    backgroundColor: "transparent",
+    border: `1px solid white`,
+    borderRadius: "32px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    cursor: "pointer",
+  },
+  "& .listwrapper": {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexDirection: "column",
+    height: "100%",
+  },
+  "& .list": {
+    width: "100%",
+  },
+  "& .button": {
+    background: colors().cyancobaltblue,
+    fontWeight: 600,
+    fontSize: "16px",
+    lineHeight: "24px",
+    color: colors().white,
+    height: "56px",
+    width: "100%",
+    borderRadius: "8px",
+    textTransform: "unset",
+    "@media only screen and (max-width: 1024px)": {
+      fontSize: "13px",
+      lineHeight: "28px",
+    },
+  },
+}));
+
+const ListItemLevel3 = styled(ListItem)({
+  "&.menuItem3": {
+    paddingLeft: "46px",
+    opacity: 0.5,
+  },
+  "&.closemenuItem3": {
+    paddingLeft: "28px",
+    opacity: 0.5,
+  },
+  "&.activeRoute": {
+    opacity: 1,
+  },
+});
+
+const ListItemLevel2 = styled(ListItem)({
+  "&.menuItem2": {
+    paddingLeft: "40px",
+    opacity: 0.5,
+    color: colors().white,
+    "@media only screen and (max-width: 1024px)": {
+      paddingLeft: "32px",
+    },
+  },
+  "&.closeMenuItem2": {
+    paddingLeft: "22px",
+    opacity: 0.5,
+    color: colors().white,
+  },
+  "&.activeRoute": {
+    opacity: 1,
+  },
+});
+
+const RenderListItem = styled(ListItem)({
+  "&.menuItem1": {
+    paddingLeft: 32,
+    paddingRight: 32,
+    opacity: 0.5,
+    color: colors().white,
+    paddingTop: 6,
+    paddingBottom: 6,
+    marginBottom: 5,
+    "@media only screen and (max-width: 1024px)": {
+      paddingLeft: 24,
+      paddingRight: 24,
+    },
+  },
+  "&.closeMenuItem": {
+    paddingLeft: 16,
+    paddingRight: 16,
+    opacity: 0.5,
+    color: colors().white,
+    paddingTop: 6,
+    paddingBottom: 6,
+    marginBottom: 5,
+  },
+  "&.menuItem2": {
+    paddingLeft: "40px",
+    opacity: 0.5,
+    color: colors().white,
+    "@media only screen and (max-width: 1024px)": {
+      paddingLeft: "32px",
+    },
+  },
+  "&.closeMenuItem2": {
+    paddingLeft: "22px",
+    opacity: 0.5,
+    color: colors().white,
+  },
+  "&.activeRoute": {
+    opacity: 1,
+  },
+});
+
+const MenuItemIconClose = styled(ListItemIcon)({
+  "&.menuItemIcononClose": {
+    minWidth: 24,
+    maxWidth: 24,
+    margin: "auto",
+    color: colors().white,
+    width: "8.5 rem",
+  },
+  "& .imageClose": {
+    height: "24px",
+    width: "24px",
+  },
+});
+
+const MenuItemIcon = styled(ListItemIcon)({
+  "&.menuItemIcon": {
+    minWidth: 24,
+    maxWidth: 24,
+    color: colors().white,
+  },
+});
+
+const ListItemTextMain = styled(ListItemText)({
+  "&.menuItemText": {
+    color: colors().white,
+    marginLeft: 24,
+    whiteSpace: "break-spaces",
+    "& span": {
+      fontFamily: "Montserrat",
+      fontSize: "16px",
+      fontWeight: 500,
+      "@media only screen and (max-width: 1024px)": {
+        fontSize: "13px",
+      },
+    },
+    "@media only screen and (max-width: 1024px)": {
+      marginLeft: 9,
+    },
+  },
+});
+
+export default SideBarComp;
+// Customizable Area End

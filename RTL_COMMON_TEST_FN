@@ -1,0 +1,292 @@
+import { expect } from "@jest/globals";
+import {
+  within,
+  waitFor,
+  fireEvent,
+  configure,
+  RenderResult,
+} from "@testing-library/react";
+
+import NavigationBlock from "../../../../framework/src/Blocks/NavigationBlock";
+
+configure({ testIdAttribute: "data-test-id" });
+
+// Helper for MUI - Select
+export async function onGetSelectOptionsValues(
+  screen: RenderResult,
+  fieldName: string,
+  selectedValue: string = "",
+  expectMinOptions: number = 1
+) {
+  const node = await screen.findByTestId(fieldName);
+  const button = node.querySelector('[role="button"]');
+
+  button && fireEvent.mouseDown(button);
+
+  const popover = await screen.findByRole("presentation");
+  const listbox = await within(popover).findByRole("listbox");
+  const options = await within(listbox).findAllByRole("option");
+  const optionValues = options.map((li) => li.getAttribute("data-value"));
+
+  waitFor(() => expect(options.length).toBeGreaterThan(expectMinOptions - 1));
+
+  const isSelected = optionValues.indexOf(selectedValue) !== -1;
+  isSelected && fireEvent.click(options[optionValues.indexOf(selectedValue)]);
+
+  button && fireEvent.mouseDown(button);
+
+  return options.map((li) => li.getAttribute("data-value"));
+}
+
+export async function onGetAutocompleteOptionValues(
+  screen: RenderResult,
+  fieldName: string,
+  popupId: string = "",
+  selectedValue: string = "",
+  expectMinOptions: number = 1
+) {
+  const autocomplete = await screen.findByTestId(fieldName);
+  autocomplete.focus();
+  fireEvent.keyDown(autocomplete, { key: "ArrowDown" });
+
+  const popovers = await screen.findAllByRole("presentation");
+  const popover = popovers.filter((node) =>
+    node.innerHTML.includes(`${popupId}-popup`)
+  )[0];
+  const options = await within(popover).findAllByRole("option");
+  const optionsValues = options.map((li) => li.innerHTML);
+
+  await waitFor(() =>
+    expect(optionsValues.length).toBeGreaterThan(expectMinOptions - 1)
+  );
+
+  const selectedIndex = optionsValues.indexOf(selectedValue);
+  const isSelected = selectedIndex != -1 && selectedValue;
+
+  if (isSelected) fireEvent.click(options[selectedIndex]);
+
+  return optionsValues;
+}
+
+export async function onChangeAutocomplete(
+  screen: RenderResult,
+  placeholder: string,
+  value: string
+) {
+  const node = await screen.findByPlaceholderText(placeholder);
+  fireEvent.change(node, { target: { value: value } });
+}
+
+// For react-datepicker only
+export async function onChangeReactDatePicker(
+  screen: RenderResult,
+  fieldName: string
+) {
+  let node = document.getElementById(fieldName) as HTMLElement;
+
+  node.click();
+  await new Promise((r) => setTimeout(r, 500));
+
+  let nodes = document.getElementsByClassName(
+    "react-datepicker__day--today"
+  ) as HTMLCollectionOf<HTMLElement>;
+
+  nodes[0].click();
+
+  await new Promise((r) => setTimeout(r, 500));
+}
+
+export async function onGetAutocompleteOptionValuesFromPopup(
+  fieldName: string,
+  popupId: string = "",
+  selectedValue: string = ""
+) {
+  let autocomplete = document.querySelector(
+    `[data-test-id="${fieldName}"]`
+  ) as HTMLElement;
+  let openButton = autocomplete.querySelector(
+    '[aria-label="Open"]'
+  ) as HTMLElement;
+  openButton.click();
+  await new Promise((r) => setTimeout(r, 100));
+
+  let ul = document.getElementById(`${popupId}-popup`) as HTMLElement;
+  let lis = ul.querySelectorAll("li") || [];
+
+  await waitFor(() => expect(lis.length).toBeGreaterThan(0));
+
+  let options = [];
+  for (let li of lis) options.push(li.innerHTML);
+  let selectedIndex = options.indexOf(selectedValue);
+  if (selectedIndex != -1) fireEvent.click(lis[selectedIndex]);
+
+  return options;
+}
+
+export async function onGetSelectOptionsValuesFromPopup(
+  fieldName: string,
+  popupId: string,
+  selectedValue: string = ""
+) {
+  const node = document.querySelector(
+    `[data-test-id="${fieldName}"]`
+  ) as HTMLElement;
+  const button = node.querySelector('[role="button"]');
+
+  button && fireEvent.mouseDown(button);
+
+  const popover =
+    document.getElementById(`menu-${popupId}`) || document.createElement("div");
+  const listbox = popover.querySelector("ul") as HTMLElement;
+  const options = Array.from(listbox.querySelectorAll("li") || []);
+  const optionValues = options.map((node: HTMLElement) =>
+    node.getAttribute("data-value")
+  );
+
+  await waitFor(() =>
+    expect(
+      Array.from(listbox.querySelectorAll("li") || []).length
+    ).toBeGreaterThan(0)
+  );
+
+  const isSelected = optionValues.indexOf(selectedValue) !== -1;
+
+  isSelected &&
+    fireEvent.click(options[
+      optionValues.indexOf(selectedValue)
+    ] as HTMLElement);
+
+  button && fireEvent.mouseDown(button);
+
+  return options.map((li: HTMLElement) => li.getAttribute("data-value"));
+}
+
+export async function onGetAutoSelectOptionsValues(
+  screen: RenderResult,
+  selectedValue: string = "",
+  fieldName: string = "autoSelectDropdown"
+) {
+  const nodes = await screen.findAllByTestId(fieldName);
+
+  nodes.forEach((node) => {
+    let button = within(node).queryByLabelText(/Close/i);
+    button && fireEvent.click(button);
+  });
+
+  let promises = nodes.map((node) => within(node).findByLabelText(/Open/i));
+  let button = await promises[0];
+  fireEvent.click(button);
+
+  const popover = await screen.findByRole("presentation");
+  const ul = popover.querySelector("ul") as HTMLElement;
+
+  const elements = Array.from(
+    ul.querySelectorAll("li > li > label > span:nth-child(2)") || []
+  )
+    .map((node) => node.innerHTML || "")
+    .filter((item) => item);
+
+  const options = within(ul).queryAllByText(selectedValue);
+  options.forEach((node) => fireEvent.click(node));
+
+  fireEvent.click(button);
+
+  return elements;
+}
+
+export async function onScrollDownAutoSelect(
+  screen: RenderResult,
+  fieldName: string = "autoSelectDropdown"
+) {
+  let nodes = await screen.findAllByTestId(fieldName);
+  nodes.forEach((node) => fireEvent.click(node));
+
+  await new Promise((r) => setTimeout(r, 1000));
+
+  nodes = await screen.findAllByTestId(fieldName);
+  let promises = nodes.map((node) => within(node).findByLabelText(/Open/i));
+  let openButton = await promises[0];
+  fireEvent.click(openButton);
+
+  let node = await screen.findByRole("presentation");
+  node = node.querySelector("ul") as HTMLElement;
+  fireEvent.scroll(node);
+  fireEvent.click(openButton);
+}
+
+export async function onSelectAutoCompleteWithSearch(
+  screen: RenderResult,
+  fieldName: string,
+  value: string
+) {
+  const fieldNameId = await screen.findByTestId(fieldName);
+  if (fieldNameId) {
+    fieldNameId.focus();
+    fireEvent.keyDown(fieldNameId, { key: "ArrowDown" });
+    const searchInput = (await fieldNameId.querySelector(
+      "input"
+    )) as HTMLInputElement;
+    fireEvent.change(searchInput, { target: { value: value }});
+    let node = await screen.findByText(value);
+    fireEvent.click(node);
+  }
+}
+
+const customGetByTestId = (
+  container: HTMLElement,
+  testId: string
+): HTMLElement | null => {
+  return container.querySelector(`[data-testid="${testId}"]`);
+};
+
+export async function onSelectAutoCompleteDropdownValue(
+  document: Document,
+  screen: RenderResult,
+  fieldName: string,
+  value: string
+) {
+  const region = customGetByTestId(
+    document.body,
+    `autoSelectDropdown-${fieldName}`
+  );
+  if (region) {
+    region.focus();
+    fireEvent.keyDown(region, { key: "ArrowDown" });
+    let node = await screen.findByText(value);
+    fireEvent.click(node);
+  }
+}
+
+export async function onSearchAutoCompleteAndSelectValue(
+  screen: RenderResult,
+  fieldName: string,
+  searchQuery: string,
+  valueId: string
+) {
+  const fieldNameId = customGetByTestId(
+    document.body,
+    `autoSelectDropdown-${fieldName}`
+  );
+  if (fieldNameId) {
+    fireEvent.mouseDown(fieldNameId);
+
+    let autoCompleteInput = (
+      await within(fieldNameId).findByTestId("autoCompleteInput")
+    ).querySelector("input") as HTMLInputElement;
+
+    fireEvent.mouseDown(autoCompleteInput);
+
+    fireEvent.change(autoCompleteInput, {
+      target: { value: searchQuery },
+    });
+
+    let listItem = await screen.findByTestId(`price-list-${valueId}`);
+    fireEvent.click(listItem);
+  }
+}
+
+export class MockNavigationBlock extends NavigationBlock {
+  render() {
+    return this.props.children;
+  }
+}

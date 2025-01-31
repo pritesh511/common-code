@@ -1,0 +1,74 @@
+import React, { ReactNode } from "react";
+
+import MessageEnum, {
+  getName,
+} from "../../framework/src/Messages/MessageEnum";
+import { IBlock } from "../../framework/src/IBlock";
+import { Message } from "../../framework/src/Message";
+import { runEngine } from "../../framework/src/RunEngine";
+import { BlockComponent } from "../../framework/src/BlockComponent";
+import RestApiClientBlock from "../../framework/src/Blocks/RestApiClientBlock";
+
+const globalConfig = require("../../framework/src/config");
+const baseURLOrderManagement = globalConfig.baseURL;
+
+interface Props {
+  children: ReactNode;
+}
+interface State {}
+interface SS {}
+
+export interface IRequest {
+  body: any;
+  url: string;
+  headers: any;
+  method: string;
+  bodyType: string; // form | json | none
+}
+
+export const initializeMockResponses = (getMockedResponses: Function) => {
+  // @ts-ignore
+  window.fetch = (urlForOrderManagement: string, data: any) => {
+    urlForOrderManagement = String(urlForOrderManagement).replace(baseURLOrderManagement, "");
+
+    let bodyTypeOrderManagement = "none";
+    if (data.body) bodyTypeOrderManagement = data.body instanceof FormData ? "form" : "json";
+
+    let request: IRequest = {
+      url: urlForOrderManagement,
+      bodyType: bodyTypeOrderManagement,
+      ...data,
+    };
+
+    let mockedResponseOrderManagement: any = getMockedResponses(request) ?? {
+      status: 200,
+      message: "Mock response not configured for the request",
+    };
+
+    return Promise.resolve({
+      json: () => mockedResponseOrderManagement,
+    });
+  };
+  // @ts-ignore
+  window.Response = class test {};
+};
+
+class MockAPIHelperBlock extends BlockComponent<Props, State, SS> {
+  constructor(props: Props) {
+    super(props);
+    this.subScribedMessages = [getName(MessageEnum.RestAPIRequestMessage)];
+    runEngine.attachBuildingBlock(this as IBlock, this.subScribedMessages);
+    this.receive = this.receive.bind(this);
+  }
+
+  receive(from: string, message: Message) {
+    let apiServerBlock = RestApiClientBlock.getInstance();
+    apiServerBlock.receive(from, message);
+  }
+
+  render(): React.ReactNode {
+    return this.props.children || <></>;
+  }
+}
+
+export default MockAPIHelperBlock;

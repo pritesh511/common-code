@@ -1,0 +1,419 @@
+import React from "react";
+import { defineFeature, loadFeature } from "jest-cucumber";
+import { jest, beforeEach } from "@jest/globals";
+import {
+  RenderResult,
+  within,
+  render,
+  fireEvent,
+  configure,
+  cleanup
+} from "@testing-library/react";
+import "@testing-library/jest-dom";
+
+import * as helpers from "../../../../framework/src/Helpers";
+
+import AddUpcharge from "../../src/AddUpcharge.web";
+import * as utils from "../../../../framework/src/Utilities";
+
+import {
+  onGetSelectOptionsValues,
+} from "../../../utilities/src/TestHelpers/Helpers";
+
+import MockAPIHelperBlock from "../../../promocodes/src/MockApiHelperBlock";
+
+configure({
+  testIdAttribute: "data-test-id",
+});
+
+const screenProps = {
+  navigation: {
+    navigate: jest.fn(),
+    getParam: jest.fn(),
+  },
+  id: "AddUpcharge",
+};
+
+const feature = loadFeature(
+  "./__tests__/features/AddUpcharge-scenario.web.feature"
+);
+
+defineFeature(feature, (test) => {
+  let screen: RenderResult;
+
+  beforeEach(() => {
+    jest.resetModules();
+    jest.doMock("react-native", () => ({ Platform: { OS: "web" } }));
+    jest.spyOn(helpers, "getOS").mockImplementation(() => "web");
+
+    jest.setTimeout(30000);
+
+  });
+  afterEach(() => {
+    window.localStorage.clear()
+  })
+
+  test("User Navigates to Create Upcharge Form", ({ given, when, then }) => {
+    given("User loading Screen", async () => {
+      window.localStorage.setItem("token", "token");
+      jest.spyOn(utils, "getStorageData").mockImplementation((key, _) => {
+        switch (key) {
+          case "token":
+            return Promise.resolve("token");
+          default:
+            return Promise.resolve();
+        }
+      });
+      screen = render(<MockAPIHelperBlock><AddUpcharge {...screenProps} /></MockAPIHelperBlock>);
+      await screen.findByText(/Add Upcharge/i);
+    });
+
+    when("User click submit without form fill up", async () => {
+      let node = await screen.findByTestId("submitBtn");
+      fireEvent.click(node);
+    });
+    then("Validation errors must be trigger", async () => {
+      let node: HTMLElement;
+      node = await screen.findByText(/Upcharge name is required./i);
+      expect(node).toBeInTheDocument();
+    });
+    then("Validation of type errors must not be trigger", () => {
+      let node = screen.queryByText(/Type is required./i);
+      expect(node).not.toBeInTheDocument();
+    });
+
+    then("User Filling All fields", async () => {
+      let node = await screen.findByTestId("field-upchange-name");
+      let input = await within(node).findByRole('textbox')
+      fireEvent.change(input, { target: { value: "Testing" } });
+
+      node = await screen.findByTestId("field-upchange-second-name");
+      input = await within(node).findByRole('textbox')
+      fireEvent.change(input, { target: { value: "Testing seocnd" } });
+
+      await onGetSelectOptionsValues(screen, "currencyType", "0");
+
+      let autocompleteDropdown = screen.getByTestId("autocompleteDropdown");
+      fireEvent.mouseDown(autocompleteDropdown);
+      let autoCompleteInput2 = (await within(autocompleteDropdown).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput2);
+      let popover = await screen.findAllByRole("presentation");
+      let Image = await within(popover[1]).findAllByTestId('Image-252');
+      fireEvent.click(Image[0]);
+
+      const sectionDropdown = screen.getByTestId("sectionDropdown");
+      fireEvent.mouseDown(sectionDropdown);
+      let autoCompleteInputSection = (await within(sectionDropdown).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInputSection);
+      fireEvent.change(autoCompleteInputSection, { target: { value: "Test Section" } })
+      let popoversection = await screen.findAllByRole("presentation");
+      await new Promise((r) => setTimeout(r, 2000))
+      let Imagesection = await within(popoversection[2]).findByTestId('products-167');
+      let sectionButton = await screen.findByText('Test Section')
+      fireEvent.click(sectionButton)
+      fireEvent.click(Imagesection);
+
+
+      const serviceDropdown = screen.getByTestId("serviceDropdown");
+      fireEvent.mouseDown(serviceDropdown);
+      let autoCompleteInputService = (await within(serviceDropdown).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInputService);
+      fireEvent.change(autoCompleteInputService, { target: { value: "testa" } })
+      let popoverservice = await screen.findAllByRole("presentation");
+      await new Promise((r) => setTimeout(r, 2000))
+      let Imageservice = await within(popoverservice[3]).findByTestId('products-199');
+      let serviceBtn = await screen.findByText('testa')
+      fireEvent.click(serviceBtn)
+      fireEvent.click(Imageservice);
+      fireEvent.blur(serviceDropdown)
+      fireEvent.click(serviceDropdown)
+
+    });
+
+    when("User click submit", async () => {
+      let nodes = await screen.findByTestId("submitBtn");
+      fireEvent.click(nodes);
+      await new Promise((r) => setTimeout(r, 1500));
+    });
+
+    then("User should navigate to upcharge list", async () => {
+      await new Promise((r) => setTimeout(r, 1000));
+
+      let node = await screen.findByTestId("btnCancel");
+      expect(node).not.toBeNull();
+      fireEvent.click(node);
+
+      expect(node).toBeDefined();
+    });
+  });
+
+  test("User Navigates to Edit Upcharge Form", ({ given, when, then, and }) => {
+    given("User loading Screen with prefill data", async () => {
+      window.localStorage.setItem("token", "token");
+      jest.spyOn(utils, "getStorageData").mockImplementation((key, _) => {
+        switch (key) {
+          case "token":
+            return Promise.resolve("token");
+          default:
+            return Promise.resolve();
+        }
+      });
+      screenProps.navigation.getParam = jest.fn().mockImplementation(() => "198");
+      screen = render(<MockAPIHelperBlock><AddUpcharge {...screenProps} /></MockAPIHelperBlock>);
+      await screen.findByText(/Edit Upcharge/i);
+    });
+
+    when("User clearing some mandatory field", async () => {
+      let node = await screen.findByTestId("field-upchange-name");
+      let input = await within(node).findByRole('textbox')
+      fireEvent.change(input, { target: { value: "" } });
+
+      node = await screen.findByTestId("field-upchange-second-name");
+      input = await within(node).findByRole('textbox')
+      fireEvent.change(input, { target: { value: "" } });
+    });
+
+    and("Submit to check validation", async () => {
+      let node = await screen.findByTestId("submitBtn");
+      fireEvent.click(node);
+
+      node = await screen.findByText(/Upcharge name is required./i);
+      expect(node).toBeInTheDocument();
+    });
+
+    then("User refill the data and submit", async () => {
+      let node = await screen.findByTestId("field-upchange-name");
+      let input = await within(node).findByRole('textbox')
+      fireEvent.change(input, { target: { value: "test" } });
+
+      node = await screen.findByTestId("field-upchange-second-name");
+      input = await within(node).findByRole('textbox');
+      fireEvent.change(input, { target: { value: "test 2" } });
+
+      const sectionDropdown = screen.getByTestId("sectionDropdown");
+      fireEvent.mouseDown(sectionDropdown);
+      let autoCompleteInput = (await within(sectionDropdown).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput);
+      fireEvent.change(autoCompleteInput, { target: { value: "" } })
+      await new Promise((r) => setTimeout(r, 1000));
+      let listbox = within(screen.getByRole("presentation")).getByRole("listbox");
+      let options = within(listbox).getAllByRole("option");
+      console.log('**options', options.length)
+      fireEvent.click(options[1].querySelector("img") as HTMLImageElement);
+      fireEvent.click(options[2].querySelector("img") as HTMLImageElement);
+      fireEvent.click(options[3].querySelector("img") as HTMLImageElement);
+      fireEvent.click(options[0].querySelector("img") as HTMLImageElement);
+      fireEvent.click(options[0].querySelector("img") as HTMLImageElement);
+      fireEvent.scroll(document.getElementById('section-popup') as Element)
+      await new Promise((r) => setTimeout(r, 1000));
+      fireEvent.change(autoCompleteInput, { target: { value: "demo" } })
+      await new Promise((r) => setTimeout(r, 1000));
+      fireEvent.blur(autoCompleteInput)
+
+      node = await screen.findByTestId("submitBtn");
+      fireEvent.click(node);
+    });
+
+    then("Success message should show", async () => {
+      let node = await screen.findByText(/Upcharge Updated Successfully./i);
+      expect(node).toBeInTheDocument();
+    });
+  });
+
+  test("User navigates to upcharge to check - Select All", ({
+    given,
+    then,
+  }) => {
+    given("I am a User loading upcharge details Screen", async () => {
+      window.localStorage.setItem("token", "token");
+      jest.spyOn(utils, "getStorageData").mockImplementation((key, _) => {
+        switch (key) {
+          case "token":
+            return Promise.resolve("token");
+          default:
+            return Promise.resolve();
+        }
+      });
+      screen = render(
+        <MockAPIHelperBlock><AddUpcharge {...screenProps} /></MockAPIHelperBlock>
+      );
+    });
+
+    then("I am checking select all options", async () => {
+    });
+  });
+
+  test("User submit upcharge form and get 422 error", ({
+    given,
+    then,
+  }) => {
+    given("I am a User loading upcharge details Screen", async () => {
+      window.localStorage.setItem("token", "token2");
+      jest.spyOn(utils, "getStorageData").mockImplementation((key, _) => {
+        switch (key) {
+          case "token":
+            return Promise.resolve("token2");
+          default:
+            return Promise.resolve();
+        }
+      });
+      screen = render(
+        <MockAPIHelperBlock><AddUpcharge {...screenProps} /></MockAPIHelperBlock>
+      );
+    });
+
+    then("user submitting form and get 422 error", async () => {
+      let node = await screen.findByTestId("field-upchange-name");
+      let input = await within(node).findByRole('textbox')
+      fireEvent.change(input, { target: { value: "Testing" } });
+
+      node = await screen.findByTestId("field-upchange-second-name");
+      input = await within(node).findByRole('textbox')
+      fireEvent.change(input, { target: { value: "Testing seocnd" } });
+
+      await onGetSelectOptionsValues(screen, "currencyType", "0");
+
+      node = await screen.findByTestId("field-price");
+      fireEvent.change(input, { target: { value: 5 } });
+      const preventDefault2 = jest.fn();
+      fireEvent.focus(node);
+      fireEvent.wheel(node, { preventDefault2 });
+
+      let nodes = await screen.findByTestId("submitBtn");
+      fireEvent.click(nodes);
+    });
+  });
+
+  test("User navigate to edit upcharge page and try to selecting other option", ({ given, when, then }) => {
+    let screen: RenderResult;
+    given("I am a User loading edit upcharge page", async () => {
+      localStorage.setItem("token", "token");
+      jest.spyOn(utils, "getStorageData").mockImplementation((key, _) => {
+        switch (key) {
+          case "token":
+            return Promise.resolve("token");
+          default:
+            return Promise.resolve();
+        }
+      });
+      screen = render(
+        <MockAPIHelperBlock><AddUpcharge {...screenProps} /></MockAPIHelperBlock>
+      );
+    });
+
+    then("I am checking infinite scrolling", async () => {
+      let productDropdowns = screen.getByTestId("productDropdowns");
+      fireEvent.mouseDown(productDropdowns);
+
+      let autoCompleteInput = (await within(productDropdowns).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput);
+      cleanup();
+    });
+
+    then("I am checking searching product and clicking on selectall button", async () => {
+      screen = render(
+        <MockAPIHelperBlock><AddUpcharge {...screenProps} /></MockAPIHelperBlock>
+      );
+
+      let productDropdowns = screen.getByTestId("productDropdowns");
+      fireEvent.mouseDown(productDropdowns);
+      let autoCompleteInput = (await within(productDropdowns).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput);
+      await new Promise((r) => setTimeout(r, 100));
+      fireEvent.change(autoCompleteInput, { target: { value: "produc" } })
+      await new Promise((r) => setTimeout(r, 700));
+    });
+
+    when("I am adding the loader", async () => {
+      let productDropdowns = screen.getByTestId("productDropdowns");
+      fireEvent.mouseDown(productDropdowns);
+
+      let autoCompleteInput = (await within(productDropdowns).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput);
+      cleanup();
+    });
+
+    then("I can see the loader", async () => {
+      screen = render(
+        <MockAPIHelperBlock><AddUpcharge {...screenProps} /></MockAPIHelperBlock>
+      );
+
+      let productDropdowns = screen.getByTestId("productDropdowns");
+      fireEvent.mouseDown(productDropdowns);
+      let autoCompleteInput = (await within(productDropdowns).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput);
+      await new Promise((r) => setTimeout(r, 100));
+      fireEvent.change(autoCompleteInput, { target: { value: "produc" } })
+      await new Promise((r) => setTimeout(r, 700));
+    });
+
+    then("I can update the empty message", async () => {
+      screen = render(
+        <MockAPIHelperBlock><AddUpcharge {...screenProps} /></MockAPIHelperBlock>
+      );
+      let productDropdowns = screen.getAllByTestId("productDropdowns");
+      fireEvent.mouseDown(productDropdowns[0]);
+      let autoCompleteInput = (await within(productDropdowns[0]).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput);
+      await new Promise((r) => setTimeout(r, 100));
+      fireEvent.change(autoCompleteInput, { target: { value: "produc" } })
+      await new Promise((r) => setTimeout(r, 700));
+    });
+
+
+    when("I select the section", async () => {
+      let productDropdowns = screen.getAllByTestId("productDropdowns");
+      fireEvent.mouseDown(productDropdowns[0]);
+
+      let autoCompleteInput = (await within(productDropdowns[0]).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput);
+      cleanup();
+    });
+
+    then("I can see the selected product", async () => {
+      screen = render(
+        <MockAPIHelperBlock><AddUpcharge {...screenProps} /></MockAPIHelperBlock>
+      );
+
+      let productDropdowns = screen.getAllByTestId("productDropdowns");
+      fireEvent.mouseDown(productDropdowns[0]);
+      let autoCompleteInput = (await within(productDropdowns[0]).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput);
+      await new Promise((r) => setTimeout(r, 100));
+      fireEvent.change(autoCompleteInput, { target: { value: "produc" } })
+      await new Promise((r) => setTimeout(r, 700));
+    });
+
+    when("I select the section with select all", async () => {
+      let productDropdowns = screen.getAllByTestId("productDropdowns");
+      fireEvent.mouseDown(productDropdowns[0]);
+
+      let autoCompleteInput = (await within(productDropdowns[0]).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput);
+      cleanup();
+    });
+
+    then("I can see the all relatedt product", async () => {
+      screen = render(
+        <MockAPIHelperBlock><AddUpcharge {...screenProps} /></MockAPIHelperBlock>
+      );
+
+      let productDropdowns = screen.getAllByTestId("productDropdowns");
+      fireEvent.mouseDown(productDropdowns[0]);
+      let autoCompleteInput = (await within(productDropdowns[0]).findByTestId("autoCompleteInput")).querySelector('input') as HTMLInputElement;
+      fireEvent.mouseDown(autoCompleteInput);
+      await new Promise((r) => setTimeout(r, 100));
+      fireEvent.change(autoCompleteInput, { target: { value: "produc" } })
+      await new Promise((r) => setTimeout(r, 700));
+    });
+  });
+});
+
+async function onSelectOption(
+  screen: RenderResult,
+  fieldName: string,
+  selectedOption: string = ""
+) {
+  const node = await screen.findByTestId(fieldName);
+  const button = node.querySelector('[role="button"]');
+}

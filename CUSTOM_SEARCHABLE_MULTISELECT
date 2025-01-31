@@ -1,0 +1,228 @@
+import React, { useCallback } from "react";
+import { InputField } from "../customComponents/CustomTags.web"
+import { StyledCheckBox } from "../CustomTheme.web";
+import { makeStyles } from '@material-ui/core/styles';
+import { SelectAllButton } from "../../../blocks/CfPriceList/src/PriceListView.web";
+import Autocomplete from "@material-ui/lab/Autocomplete";
+import { withStyles } from "@material-ui/core/styles";
+import { IProductItems } from "../../../blocks/CfPriceList/src/PriceListViewController.web";
+import { Box, TextField, TextFieldProps,Popper,PaperProps,PopperProps,Paper  } from "@material-ui/core";
+import { colors } from "../../../blocks/utilities/src/Colors";
+import {isEmpty} from "lodash"
+
+interface Props {
+    dataTestId: string,
+    checkSelectAllText: Function,
+    value?: { id: string | number, option: string }[],
+    selectedOptionForList?: { id: string | number, option: string }[],
+    optionList: Array<IProductItems | { id: string | number, option: string }>,
+    placeHolderText: string,
+    debouncedFunction: Function,
+    handleScroll: Function,
+    handleClickOnSelectAll: Function,
+    handleEmptyAutoSelectValue: Function,
+    handleSelectOptions: Function,
+    emptyDataMessage: string,
+    isOnBlurFunction?: Function,
+    id?: string,
+    name?: string,
+    style?: Object,
+    isError?: boolean,
+    customPaper?: boolean,
+    customPopper?: boolean
+    changeInputOnClear?: boolean
+    listBoxHeight?:string;
+    disabled?: boolean;
+    endAdornment?: React.ReactNode
+    renderTags?: () => React.ReactNode,
+    keepSelectAll?: boolean,
+}
+
+const useStyles = makeStyles(() => ({
+    newProductDropdown: {
+        minHeight: 56,
+        minWidth: 300,
+        maxWidth: "100%"
+    },
+    menuItems: {
+        display: 'flex',
+        alignItems: 'center',
+        width: '100%'
+    },
+    mainComp:{
+        maxHeight: 200,
+        width: '100%',
+    }
+}));
+
+export const CustomSearchableMultiSelect = ({
+    dataTestId = 'searchableMultiselect',
+    checkSelectAllText,
+    value,
+    selectedOptionForList,
+    optionList,
+    placeHolderText = "",
+    debouncedFunction,
+    handleScroll,
+    handleClickOnSelectAll,
+    handleEmptyAutoSelectValue,
+    handleSelectOptions,
+    emptyDataMessage = "No Data Found",
+    isOnBlurFunction,
+    id = "productAutoSelect",
+    name = "productAutoSelect",
+    style = {},
+    isError,
+    customPaper,
+    customPopper,
+    changeInputOnClear,
+    listBoxHeight="200",
+    disabled,
+    endAdornment,
+    renderTags,
+    keepSelectAll = true,
+}: Props) => {
+    const classes = useStyles();
+    const handleChangeInputOnClear = (event: unknown, value: unknown, reason: string) => {
+        if (reason === "clear") {
+            debouncedFunction("")
+        }
+    }
+
+    let optionArray:{id:string|number,option:string}[]  = [];
+    if (!keepSelectAll) {
+      optionArray = optionList.map((item) => ({
+        id: item.id,
+        option: "attributes" in item ? item.attributes.product_name : item.option,
+      }));
+    } else {
+        if(optionList.length > 0){
+            optionArray = [
+            { id: "-1", option: "Select All" },
+            ...optionList.map((item) => ({
+              id: item.id,
+              option:
+                "attributes" in item ? item.attributes.product_name : item.option,
+            }))];
+        }
+        else{
+            optionArray = [];
+        }
+    }
+
+    return (
+        <SimpleCustomAutocomplete
+            disabled={disabled}
+            data-test-id={dataTestId}
+            label={'productAutoSelect'}
+            id={id}
+            name={name}
+            multiple
+            noOptionsText={emptyDataMessage}
+            fullWidth
+            autoHighlight={true}
+            onBlur={() => { isOnBlurFunction && isOnBlurFunction() }}
+            value={value}
+            options={optionArray || []}
+            disableCloseOnSelect
+            getOptionLabel={(option: { id: string | number, option: string }) => option.option ? option.option: ""}
+            className={classes.newProductDropdown + ' fullWidth'} 
+            style={style}
+            onChange={changeInputOnClear ? handleChangeInputOnClear : undefined}
+            renderTags={renderTags}
+            renderOption={(option: { id: string, option: string }, props: Object) => (
+                <>
+                    <Box
+                        component={"li"}
+                        {...props}
+                        id={`products-${option.id}`}
+                        data-test-id={`products-${option.id}`}
+                        className={classes.menuItems}
+                        onClick={() => {
+                            handleSelectOptions(selectedOptionForList, option)
+                        }}
+                    >
+                        <StyledCheckBox checked={selectedOptionForList?.map((item) => item.id).includes(option.id)} />&nbsp;<span>{option.option}</span>
+                    </Box>
+                </>
+            )}
+            renderInput={(params: JSX.IntrinsicAttributes & TextFieldProps) => (
+                <>
+                    <TextFieldComp
+                        {...params}
+                        style={{ paddingTop: "0px" }}
+                        data-test-id="autoCompleteInput"
+                        fullWidth={true}
+                        placeholder={isEmpty(value) ? placeHolderText :""}
+                        variant='outlined'
+                        className={`${isError && 'isError'}`}
+                        onChange={(e: React.ChangeEvent<{ value: string }>) => { debouncedFunction(e.target.value) }}
+                        onKeyDown={renderTags ? (event) => {
+                            if (event.key === 'Backspace' || event.key === 'Delete' || event.key === 'ArrowLeft') {
+                                event.stopPropagation()
+                              }
+                        } : params.onKeyDown}
+                        InputProps={{
+                            ...params.InputProps,
+                            ...(endAdornment ? { endAdornment } : {})
+                        }}
+                    />
+                </>
+            )}
+            ListboxProps={{
+                onScroll: handleScroll,
+                style: {
+                    maxHeight: listBoxHeight,
+                }
+            }}
+            PaperComponent={useCallback((props: PaperProps) => {
+                return (<Paper
+                            {...props}
+                            className={classes.mainComp}
+                            data-test-id={`${dataTestId}-popup-container`}
+                        />)
+            },[])}
+            PopperComponent={useCallback((props: PopperProps) => {
+                return (<Popper {...props}
+                    placement="bottom"
+                />)
+            },[])}
+        />
+    );
+}
+
+const SimpleCustomAutocomplete: any = withStyles({
+    root: {
+        "& .MuiInputBase-root": {
+            borderRadius: "8px",
+            minHeight: "56px",
+            "@media only screen and (max-width: 1024px)": {
+                alignContent: 'center',
+                fontSize: "12px",
+                height: 'auto',
+                padding: "9.5px 4px"
+            },
+        },
+        "& .MuiChip-deleteIcon": {
+            display: 'none'
+        },
+        "& .MuiChip-root": {
+            color: "#204B9C",
+            backgroundColor: "#204B9C1A",
+        }
+    },
+})(Autocomplete);
+
+const TextFieldComp = withStyles({
+    root: {
+        "&.isError .MuiOutlinedInput-notchedOutline": {
+            borderColor: 'red'
+        },
+        "@media only screen and (max-width: 1024px)": {
+            '& .MuiInputBase-input': {
+                fontSize: '12px',
+                padding: '6.5px 14px !important'
+            },
+        },
+    },
+})(TextField)

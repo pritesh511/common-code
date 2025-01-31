@@ -1,0 +1,181 @@
+import React from "react";
+import {
+  InputField,
+  SimpleCustomAutocomplete,
+} from "./customComponents/CustomTags.web";
+import { Box, FormControlLabel, Radio, styled, InputAdornment, PaperProps } from "@material-ui/core";
+
+export interface optionObj {
+  id: string | number;
+  option: string;
+  image?: string;
+  disabled?: boolean;
+}
+
+interface myProps {
+  onChange: any;
+  options: optionObj[];
+  value: string | number | null;
+  className?: string;
+  onBlur?: any;
+  fieldName: string;
+  placeholder: string;
+  disableClear?: boolean;
+  isRadioButtonShow?: boolean;
+  handleScroll?: (event: React.SyntheticEvent) => void;
+  debouncedFunction?: Function
+  error?: boolean
+  noOptionText?: string
+  listBoxStyle?: object
+  inputStyle?: object
+  isDisabled?: boolean;
+  clearOnBlur?: boolean;
+  paperComponent?: (props: PaperProps) => void
+}
+
+const autoSeletStyle = {
+  radioIcon: {
+    display: "inline-block",
+    borderRadius: "51%",
+    width: 20,
+    height: 20,
+    border: "1px solid #64748C",
+  },
+  radioCheckedIcon: {
+    display: "inline-block",
+    width: 20,
+    borderRadius: "51%",
+    height: 20,
+    border: "6px solid #204B9D",
+    color: "#204b9c",
+  },
+  inputField: { 
+    paddingTop: "0px",
+      }
+};
+
+export default function AutocompleteSelect(props: myProps) {
+  const {
+    handleScroll,
+    debouncedFunction,
+    onChange,
+    options,
+    value,
+    fieldName,
+    placeholder,
+    onBlur,
+    disableClear,
+    isRadioButtonShow = true,
+    className = '',
+    error,
+    noOptionText,
+    listBoxStyle,
+    inputStyle,
+    isDisabled = false,
+    clearOnBlur = false,
+    paperComponent
+  } = props;
+
+  const selectedOption = options.find(option => option.id === value)
+  
+  return (
+    <SimpleCustomAutocomplete
+      data-test-id='autoSelectDropdown'
+      data-testid={`autoSelectDropdown-${fieldName}`}
+      disabled={isDisabled}
+      getOptionDisabled={(option:optionObj) => option.disabled}
+      labelId={fieldName}
+      id={fieldName}
+      name={fieldName}
+      className={className}
+      noOptionsText={noOptionText || 'No data found'}
+      fullWidth
+      autoHighlight={true}
+      onChange={onChange}
+      onBlur={onBlur}
+      value={options.find((c: any) => c.id == value) || ""}
+      options={options}      
+      disableClearable={disableClear}
+      clearOnEscape={false}
+      clearOnBlur={clearOnBlur}
+      getOptionLabel={(option: any) => {
+        return options.length && option.option ? option.option : "";
+      }}
+      renderValue={(option: any) => <Box><img src={option.image}></img>{option.option}</Box>}
+      renderOption={(option: any, props: any) => (
+        <Box
+          component={"li"}
+          {...props}
+          data-test-id={`price-list-${option.id}`}
+        >
+          {
+            isRadioButtonShow ? (
+              <FormControlLabel
+                control={
+                  <>
+                    <Radio
+                      checked={option.id == value}
+                      icon={<span style={autoSeletStyle.radioIcon} />}
+                      checkedIcon={<span style={autoSeletStyle.radioCheckedIcon} />}
+                    />
+                    {
+                      option.image && <StyledIcon src={option.image} alt="" />
+                    }
+                  </>  
+                }
+                label={<LabelOptions>{option.option}</LabelOptions>}
+              />
+            ) : <label>{option.option}</label>
+          }
+        </Box>
+      )}
+      renderInput={(params: any) => (
+        <>
+          <InputField
+            style={autoSeletStyle.inputField}
+            {...params}
+            fullWidth={true}
+            placeholder={placeholder}
+            variant='outlined'
+            data-test-id="autoCompleteInput"
+            onChange={(e: React.ChangeEvent<{ value: string }>) => { 
+              debouncedFunction && debouncedFunction(e.target.value) 
+            }}
+            InputProps={{
+              ...(params.InputProps || {}),
+              ...(inputStyle ? {style: inputStyle} : {}),
+              ...selectedOption?.image && {
+                startAdornment: (
+                   <InputAdornment position="start">
+                      <StyledIcon className="option-image" src={selectedOption?.image} alt="Selected Option"  />
+                   </InputAdornment>
+              )}
+            }}
+            error={error}
+          />
+        </>
+      )}
+      ListboxProps={{
+        onScroll: handleScroll,
+        style: listBoxStyle
+      }}
+      PaperComponent={paperComponent}
+    />
+  );
+}
+
+const StyledIcon = styled("img")({
+  width: "20px",
+  height: "20px",
+  marginRight: "10px",
+  marginLeft: "5px"
+})
+
+const LabelOptions = styled("p")({
+  fontWight:500,
+  fontSize:"16px",
+  lineHeight:"24px",
+  "@media only screen and (max-width: 1024px)": {
+    fontSize:"12px",
+  }
+})

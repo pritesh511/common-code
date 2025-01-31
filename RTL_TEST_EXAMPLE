@@ -1,0 +1,5071 @@
+import React from "react";
+import { jest } from "@jest/globals";
+import { defineFeature, loadFeature } from "jest-cucumber";
+
+import {
+  render,
+  cleanup,
+  configure,
+  RenderResult,
+  fireEvent,
+  within,
+} from "@testing-library/react";
+import "@testing-library/jest-dom";
+import * as helpers from "framework/src/Helpers";
+import * as utils from "framework/src/Utilities";
+
+import InitializeMockResponses, {
+  IRequest,
+} from "../../../utilities/src/TestHelpers/InitializeMockResponses";
+
+import getPageContainerMocks from "../../../utilities/src/TestHelpers/getPageContainerMocks";
+import {
+  customerResponseWithJeansCatalogue,
+  orderResponseWithCartInstatus,
+  orderResponseWithDiscountResponse,
+  orderResponseWithPlacedInstatus,
+  orderUpdateResponse,
+  orderUpdateResponse1
+} from "../../../../components/src/commonMockReponses";
+
+import ShoppingCart from "../../src/ShoppingCart.web";
+import {
+  onChangeReactDatePicker,
+  onGetSelectOptionsValues,
+  onSearchAutoCompleteAndSelectValue,
+  onSelectAutoCompleteDropdownValue,
+  onSelectAutoCompleteWithSearch
+} from "../../../utilities/src/TestHelpers/Helpers";
+import { IMyUser } from "../../../navigationmenu/src/utils";
+import { Message } from "../../../../framework/src/Message";
+import {
+  CustomEnums,
+  getCustomEnumName,
+} from "../../../../blocks/utilities/src/CustomBlockHelpers";
+import { runEngine } from "../../../../framework/src/RunEngine";
+
+const baseURL = require("../../../../framework/src/config").baseURL;
+
+const headersWithContent = {
+  token: "token",
+  "Content-Type": "application/json",
+};
+
+const screenProps = {
+  id: "PaymentModal",
+  navigation: {
+    navigate: jest.fn(),
+    getParam: jest.fn().mockImplementation(() => ""),
+  },
+  currentUser: {
+    attributes: {
+      activated: true,
+      country_code: "91",
+      email: "a@g.com",
+      first_name: "AyushiTest",
+      role: {
+        id: 117,
+        name: "Cashier",
+        created_at: "2023-07-21T07:09:14.270Z",
+        updated_at: "2023-09-28T12:23:34.476Z",
+        active: false,
+        icon_id: 138,
+        role_permissions_count: 20,
+        accounts_count: 2,
+      },
+      full_phone_number: "919898989898",
+      last_name: "DTest",
+      phone_number: "9898989898",
+      type: "Employee",
+      created_at: "2023-07-27T05:50:29.269Z",
+      updated_at: "2023-10-04T12:46:27.692Z",
+      device_id: null,
+      unique_auth_id: "Q9hUPKzoLAeiHwhOI4qzQQtt",
+      status: "regular",
+      user_type: 0,
+      express_delivery_enable: false,
+      full_name: null,
+      date_of_birth: null,
+      gender: null,
+      in_app_notification: true,
+      email_notification: true,
+      sms_notification: true,
+      whatsapp_notification: true,
+      user_login_id: null,
+      employee_proifle: {
+        data: {
+          id: "243",
+          type: "employee_profile",
+          attributes: {
+            id: 243,
+            department_name: "IT",
+            position: "Test",
+            direct_manager_name: "TestD",
+            user_login_id: "ayushi1",
+            location: "",
+            employment_type: null,
+            profile_logo: null,
+            region_manager_id: 28,
+            background_cover_photo: null,
+            store_management_id: 66,
+            plant_section: "at_store",
+            region: {
+              data: {
+                id: "28",
+                type: "simple_region",
+                attributes: {
+                  id: 28,
+                  branch_name: "Delhi",
+                  branch_id: "4412",
+                  email: "compname123@mailinator.com",
+                  telephone: "918888888888",
+                  others: {},
+                  branch_short_name: "compname",
+                  activated: true,
+                  created_at: "2023-06-21T06:59:10.956Z",
+                  updated_at: "2023-07-21T15:12:06.383Z",
+                  address: "Central Delhi",
+                },
+              },
+            },
+            store_management: {
+              id: "21",
+              type: "store_configuration",
+              attributes: {
+                id: 21,
+                is_process_cleaning_products: true,
+                store_management_id: 66,
+                payment_method_screen: true,
+                created_at: "2023-08-18T08:56:53.781Z",
+                updated_at: "2023-08-22T07:17:50.017Z",
+                item_preference_popup: true,
+                price_list_id: 35,
+                price_list: {
+                  data: {
+                    id: "35",
+                    type: "price_list_dropdown",
+                    attributes: {
+                      id: 35,
+                      name: "Master Price List",
+                      price_list_type: "Store",
+                    },
+                  },
+                },
+                sections: [
+                  {
+                    id: 134,
+                    name: "Kids",
+                  },
+                  {
+                    id: 133,
+                    name: "Men",
+                  },
+                  {
+                    id: 132,
+                    name: "Women",
+                  },
+                ],
+              },
+              store_name: "Raheja",
+              store_id: 66,
+            },
+          },
+        },
+      },
+      customer_profile: {
+        data: null,
+      },
+      permission_groups: [
+        {
+          id: 1,
+          name: "Company",
+          permitted: false,
+          permission_group_key: "company_apis",
+          permission_sub_groups: [
+            {
+              id: 1,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 2,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 3,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 4,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: "Role Assignment",
+          permitted: true,
+          permission_group_key: "role_apis",
+          permission_sub_groups: [
+            {
+              id: 5,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 6,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 7,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 8,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: "Account Creation",
+          permitted: true,
+          permission_group_key: "account_apis",
+          permission_sub_groups: [
+            {
+              id: 9,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 10,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 11,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 12,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 4,
+          name: "Plant Creation",
+          permitted: false,
+          permission_group_key: "plant_apis",
+          permission_sub_groups: [
+            {
+              id: 13,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 14,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 15,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 16,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 14,
+          name: "Store Management",
+          permitted: false,
+          permission_group_key: "store_management_apis",
+          permission_sub_groups: [
+            {
+              id: 17,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 18,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 19,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 20,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 5,
+          name: "Services Creation",
+          permitted: false,
+          permission_group_key: "service_apis",
+          permission_sub_groups: [
+            {
+              id: 21,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 22,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 23,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 24,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 7,
+          name: "Specifications Management",
+          permitted: true,
+          permission_group_key: "specification_apis",
+          permission_sub_groups: [
+            {
+              id: 25,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 26,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 27,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 28,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 6,
+          name: "Upcharge List Creation",
+          permitted: true,
+          permission_group_key: "service_apis",
+          permission_sub_groups: [
+            {
+              id: 29,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 30,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 31,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 32,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 19,
+          name: "Region Creation",
+          permitted: true,
+          permission_group_key: "region_apis",
+          permission_sub_groups: [
+            {
+              id: 33,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 34,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 35,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 36,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 21,
+          name: "Area Creation",
+          permitted: false,
+          permission_group_key: "section_apis",
+          permission_sub_groups: [
+            {
+              id: 37,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 38,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 39,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 40,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 23,
+          name: "Preference List Creation",
+          permitted: true,
+          permission_group_key: "preference_list_apis",
+          permission_sub_groups: [
+            {
+              id: 41,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 42,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 43,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 44,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 8,
+          name: "Products Management",
+          permitted: true,
+          permission_group_key: "product_apis",
+          permission_sub_groups: [
+            {
+              id: 45,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 46,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 47,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 48,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 9,
+          name: "Sections Management",
+          permitted: false,
+          permission_group_key: "section_apis",
+          permission_sub_groups: [
+            {
+              id: 49,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 50,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 51,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 52,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 27,
+          name: "Activate Permissions",
+          permitted: false,
+          permission_group_key: "activate_apis",
+          permission_sub_groups: [
+            {
+              id: 53,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 54,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 55,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 56,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 145,
+          name: "Order Creation",
+          permitted: true,
+          permission_group_key: "customer_preferences_apis",
+          permission_sub_groups: [
+            {
+              id: 57,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 58,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 59,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 60,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 211,
+          name: "Tax calculator",
+          permitted: false,
+          permission_group_key: "taxcalculators_apis",
+          permission_sub_groups: [
+            {
+              id: 61,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 62,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 63,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 64,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 394,
+          name: "Wallet",
+          permitted: false,
+          permission_group_key: "wallet_apis",
+          permission_sub_groups: [
+            {
+              id: 65,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 66,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 67,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 68,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 863,
+          name: "Loyalty System",
+          permitted: true,
+          permission_group_key: "reward_apis",
+          permission_sub_groups: [
+            {
+              id: 69,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 70,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 71,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 72,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 1424,
+          name: "Customer Type Management",
+          permitted: true,
+          permission_group_key: "customer_type_apis",
+          permission_sub_groups: [
+            {
+              id: 77,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 78,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 79,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 80,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 1697,
+          name: "Promo Code",
+          permitted: false,
+          permission_group_key: "promo_code_apis",
+          permission_sub_groups: [
+            {
+              id: 85,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 86,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 87,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 88,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 1780,
+          name: "Gallery Module",
+          permitted: false,
+          permission_group_key: "gallery_apis",
+          permission_sub_groups: [
+            {
+              id: 89,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 90,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 91,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 92,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 1829,
+          name: "Invite Friend Module",
+          permitted: false,
+          permission_group_key: "invite_apis",
+          permission_sub_groups: [
+            {
+              id: 93,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 94,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 95,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 96,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2004,
+          name: "Plant Order Management",
+          permitted: true,
+          permission_group_key: "plant_order_management",
+          permission_sub_groups: [
+            {
+              id: 97,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 98,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 99,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 100,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2107,
+          name: "Home cleaning setting",
+          permitted: true,
+          permission_group_key: "home_cleaning_settings",
+          permission_sub_groups: [
+            {
+              id: 101,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 102,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 103,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 104,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 2236,
+          name: "Manage Driver Orders",
+          permitted: false,
+          permission_group_key: "manage_driver_orders",
+          permission_sub_groups: [
+            {
+              id: 105,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 106,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 107,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 108,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2467,
+          name: "Ticketing Team Management",
+          permitted: false,
+          permission_group_key: "ticketing_team_apis",
+          permission_sub_groups: [
+            {
+              id: 245,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 246,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 247,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 248,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2476,
+          name: "Transfer Request",
+          permitted: false,
+          permission_group_key: "transfer_request",
+          permission_sub_groups: [
+            {
+              id: 281,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 282,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 283,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 284,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2493,
+          name: "Home Cleaning Product",
+          permitted: false,
+          permission_group_key: "home_cleaning_product",
+          permission_sub_groups: [
+            {
+              id: 349,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 350,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 351,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 352,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+      ],
+      permission_count: 22,
+    },
+  } as unknown as IMyUser,
+  selectedMainTab: "",
+};
+
+const screenEditProps = {
+  id: "PaymentModal",
+  navigation: {
+    navigate: jest.fn(),
+    getParam: jest.fn().mockImplementation(() => "5913"),
+  },
+  currentUser: {
+    attributes: {
+      activated: true,
+      country_code: "91",
+      email: "a@g.com",
+      first_name: "AyushiTest",
+      role: {
+        id: 117,
+        name: "Cashier",
+        created_at: "2023-07-21T07:09:14.270Z",
+        updated_at: "2023-09-28T12:23:34.476Z",
+        active: false,
+        icon_id: 138,
+        role_permissions_count: 20,
+        accounts_count: 2,
+      },
+      full_phone_number: "919898989898",
+      last_name: "DTest",
+      phone_number: "9898989898",
+      type: "Employee",
+      created_at: "2023-07-27T05:50:29.269Z",
+      updated_at: "2023-10-04T12:46:27.692Z",
+      device_id: null,
+      unique_auth_id: "Q9hUPKzoLAeiHwhOI4qzQQtt",
+      status: "regular",
+      user_type: 0,
+      express_delivery_enable: false,
+      full_name: null,
+      date_of_birth: null,
+      gender: null,
+      in_app_notification: true,
+      email_notification: true,
+      sms_notification: true,
+      whatsapp_notification: true,
+      user_login_id: null,
+      employee_proifle: {
+        data: {
+          id: "243",
+          type: "employee_profile",
+          attributes: {
+            id: 243,
+            department_name: "IT",
+            position: "Test",
+            direct_manager_name: "TestD",
+            user_login_id: "ayushi1",
+            location: "",
+            employment_type: null,
+            profile_logo: null,
+            region_manager_id: 28,
+            background_cover_photo: null,
+            store_management_id: 66,
+            plant_section: "at_store",
+            region: {
+              data: {
+                id: "28",
+                type: "simple_region",
+                attributes: {
+                  id: 28,
+                  branch_name: "Delhi",
+                  branch_id: "4412",
+                  email: "compname123@mailinator.com",
+                  telephone: "918888888888",
+                  others: {},
+                  branch_short_name: "compname",
+                  activated: true,
+                  created_at: "2023-06-21T06:59:10.956Z",
+                  updated_at: "2023-07-21T15:12:06.383Z",
+                  address: "Central Delhi",
+                },
+              },
+            },
+            store_management: {
+              id: "21",
+              type: "store_configuration",
+              attributes: {
+                id: 21,
+                is_process_cleaning_products: true,
+                store_management_id: 66,
+                payment_method_screen: true,
+                created_at: "2023-08-18T08:56:53.781Z",
+                updated_at: "2023-08-22T07:17:50.017Z",
+                item_preference_popup: true,
+                price_list_id: 35,
+                price_list: {
+                  data: {
+                    id: "35",
+                    type: "price_list_dropdown",
+                    attributes: {
+                      id: 35,
+                      name: "Master Price List",
+                      price_list_type: "Store",
+                    },
+                  },
+                },
+                sections: [
+                  {
+                    id: 134,
+                    name: "Kids",
+                  },
+                  {
+                    id: 133,
+                    name: "Men",
+                  },
+                  {
+                    id: 132,
+                    name: "Women",
+                  },
+                ],
+              },
+              store_name: "Raheja",
+              store_id: 66,
+            },
+          },
+        },
+      },
+      customer_profile: {
+        data: null,
+      },
+      permission_groups: [
+        {
+          id: 1,
+          name: "Company",
+          permitted: false,
+          permission_group_key: "company_apis",
+          permission_sub_groups: [
+            {
+              id: 1,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 2,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 3,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 4,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: "Role Assignment",
+          permitted: true,
+          permission_group_key: "role_apis",
+          permission_sub_groups: [
+            {
+              id: 5,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 6,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 7,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 8,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: "Account Creation",
+          permitted: true,
+          permission_group_key: "account_apis",
+          permission_sub_groups: [
+            {
+              id: 9,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 10,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 11,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 12,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 4,
+          name: "Plant Creation",
+          permitted: false,
+          permission_group_key: "plant_apis",
+          permission_sub_groups: [
+            {
+              id: 13,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 14,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 15,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 16,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 14,
+          name: "Store Management",
+          permitted: false,
+          permission_group_key: "store_management_apis",
+          permission_sub_groups: [
+            {
+              id: 17,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 18,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 19,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 20,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 5,
+          name: "Services Creation",
+          permitted: false,
+          permission_group_key: "service_apis",
+          permission_sub_groups: [
+            {
+              id: 21,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 22,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 23,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 24,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 7,
+          name: "Specifications Management",
+          permitted: true,
+          permission_group_key: "specification_apis",
+          permission_sub_groups: [
+            {
+              id: 25,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 26,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 27,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 28,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 6,
+          name: "Upcharge List Creation",
+          permitted: true,
+          permission_group_key: "service_apis",
+          permission_sub_groups: [
+            {
+              id: 29,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 30,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 31,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 32,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 19,
+          name: "Region Creation",
+          permitted: true,
+          permission_group_key: "region_apis",
+          permission_sub_groups: [
+            {
+              id: 33,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 34,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 35,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 36,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 21,
+          name: "Area Creation",
+          permitted: false,
+          permission_group_key: "section_apis",
+          permission_sub_groups: [
+            {
+              id: 37,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 38,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 39,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 40,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 23,
+          name: "Preference List Creation",
+          permitted: true,
+          permission_group_key: "preference_list_apis",
+          permission_sub_groups: [
+            {
+              id: 41,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 42,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 43,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 44,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 8,
+          name: "Products Management",
+          permitted: true,
+          permission_group_key: "product_apis",
+          permission_sub_groups: [
+            {
+              id: 45,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 46,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 47,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 48,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 9,
+          name: "Sections Management",
+          permitted: false,
+          permission_group_key: "section_apis",
+          permission_sub_groups: [
+            {
+              id: 49,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 50,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 51,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 52,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 27,
+          name: "Activate Permissions",
+          permitted: false,
+          permission_group_key: "activate_apis",
+          permission_sub_groups: [
+            {
+              id: 53,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 54,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 55,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 56,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 145,
+          name: "Order Creation",
+          permitted: true,
+          permission_group_key: "customer_preferences_apis",
+          permission_sub_groups: [
+            {
+              id: 57,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 58,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 59,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 60,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 211,
+          name: "Tax calculator",
+          permitted: false,
+          permission_group_key: "taxcalculators_apis",
+          permission_sub_groups: [
+            {
+              id: 61,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 62,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 63,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 64,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 394,
+          name: "Wallet",
+          permitted: false,
+          permission_group_key: "wallet_apis",
+          permission_sub_groups: [
+            {
+              id: 65,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 66,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 67,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 68,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 863,
+          name: "Loyalty System",
+          permitted: true,
+          permission_group_key: "reward_apis",
+          permission_sub_groups: [
+            {
+              id: 69,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 70,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 71,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 72,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 1424,
+          name: "Customer Type Management",
+          permitted: true,
+          permission_group_key: "customer_type_apis",
+          permission_sub_groups: [
+            {
+              id: 77,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 78,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 79,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 80,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 1697,
+          name: "Promo Code",
+          permitted: false,
+          permission_group_key: "promo_code_apis",
+          permission_sub_groups: [
+            {
+              id: 85,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 86,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 87,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 88,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 1780,
+          name: "Gallery Module",
+          permitted: false,
+          permission_group_key: "gallery_apis",
+          permission_sub_groups: [
+            {
+              id: 89,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 90,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 91,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 92,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 1829,
+          name: "Invite Friend Module",
+          permitted: false,
+          permission_group_key: "invite_apis",
+          permission_sub_groups: [
+            {
+              id: 93,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 94,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 95,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 96,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2004,
+          name: "Plant Order Management",
+          permitted: true,
+          permission_group_key: "plant_order_management",
+          permission_sub_groups: [
+            {
+              id: 97,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 98,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 99,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 100,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2107,
+          name: "Home cleaning setting",
+          permitted: true,
+          permission_group_key: "home_cleaning_settings",
+          permission_sub_groups: [
+            {
+              id: 101,
+              name: "Create",
+              permitted: true,
+            },
+            {
+              id: 102,
+              name: "Read",
+              permitted: true,
+            },
+            {
+              id: 103,
+              name: "Update",
+              permitted: true,
+            },
+            {
+              id: 104,
+              name: "Delete",
+              permitted: true,
+            },
+          ],
+        },
+        {
+          id: 2236,
+          name: "Manage Driver Orders",
+          permitted: false,
+          permission_group_key: "manage_driver_orders",
+          permission_sub_groups: [
+            {
+              id: 105,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 106,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 107,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 108,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2467,
+          name: "Ticketing Team Management",
+          permitted: false,
+          permission_group_key: "ticketing_team_apis",
+          permission_sub_groups: [
+            {
+              id: 245,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 246,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 247,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 248,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2476,
+          name: "Transfer Request",
+          permitted: false,
+          permission_group_key: "transfer_request",
+          permission_sub_groups: [
+            {
+              id: 281,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 282,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 283,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 284,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+        {
+          id: 2493,
+          name: "Home Cleaning Product",
+          permitted: false,
+          permission_group_key: "home_cleaning_product",
+          permission_sub_groups: [
+            {
+              id: 349,
+              name: "Create",
+              permitted: false,
+            },
+            {
+              id: 350,
+              name: "Read",
+              permitted: false,
+            },
+            {
+              id: 351,
+              name: "Update",
+              permitted: false,
+            },
+            {
+              id: 352,
+              name: "Delete",
+              permitted: false,
+            },
+          ],
+        },
+      ],
+      permission_count: 22,
+    },
+  } as unknown as IMyUser,
+  selectedMainTab: "",
+};
+
+
+configure({ testIdAttribute: "data-test-id" });
+
+const feature = loadFeature(
+  "./__tests__/features/ShoppingCartTest-scenario.web.feature"
+);
+
+const customerSearchResponse = {
+  data: {
+    id: "1356",
+    type: "web_customer",
+    attributes: {
+      full_name: "Pritesh Makasana",
+      activated: true,
+      email: "pritesh@gmail.com",
+      date_of_birth: null,
+      phone_number: 560091201,
+      country_code: 966,
+      deactivated_platform_id: null,
+      deactivated_reason: null,
+      customer_profile: {
+        data: {
+          id: "968",
+          type: "web_customer_profile",
+          attributes: {
+            street_address: "",
+            city: null,
+            employee_id: "",
+            customer_id: "A4nz0ACL",
+            post_code: "",
+            business_id: null,
+            price_list: {
+              data: {
+                id: "35",
+                type: "price_list_dropdown",
+                attributes: {
+                  id: 35,
+                  name: "Master Price List",
+                  price_list_type: "Store",
+                  is_master_price_list: true,
+                },
+              },
+            },
+            notes: "",
+            gender_id: null,
+            private_note: "",
+            customer_type: null,
+            profession: { data: null },
+            organisation_tax: { data: null },
+            payment: { id: null, name: null },
+            organization: { data: null },
+            region: {
+              data: {
+                id: "93",
+                type: "region_dropdown",
+                attributes: { id: 93, branch_name: "pune", name: "pune" },
+              },
+            },
+          },
+        },
+      },
+      user_addresses: {
+        data: [
+          {
+            id: "884",
+            type: "user_address",
+            attributes: {
+              id: 884,
+              location: "Surat, Gujarat",
+              address: "Surat, Gujarat",
+              landmark: null,
+              post_code: "364780",
+              latitude: null,
+              longitude: null,
+              notes: null,
+              label: null,
+              default: true,
+              city: { id: 20, name_en: "Abha", name_ar: "أبها", name: "Abha" },
+            },
+          },
+          {
+            id: "883",
+            type: "user_address",
+            attributes: {
+              id: 883,
+              location: "Surat, Gujarat",
+              address: "Surat, Gujarat",
+              landmark: null,
+              post_code: "364780",
+              latitude: null,
+              longitude: null,
+              notes: null,
+              label: null,
+              default: true,
+              city: { id: 20, name_en: "Abha", name_ar: "أبها", name: "Abha" },
+            },
+          },
+        ],
+      },
+      customer_preferences_attributes: null,
+      order: {
+        id: 5913,
+        order_number: "OD00005507",
+        account_id: 1356,
+        sub_total: "0.00",
+        total: "0.00",
+        status: "in_cart",
+        applied_discount: "0.00",
+        cancellation_reason: null,
+        tax_charges: "0.0",
+        shipping_charge: null,
+        shipping_discount: null,
+        shipping_total: null,
+        total_tax: "0.00",
+        created_at: "2024-06-12T06:50:14.982+03:00",
+        updated_at: "2024-06-13T07:48:41.979+03:00",
+        save_for_future: false,
+        notes: "",
+        promo_code_id: null,
+        store_management_id: 113,
+        is_quick_drop: true,
+        tax_included_in_product_price: false,
+        address_id: null,
+        is_mobile: false,
+        paid_at: null,
+        adjustment_reason: null,
+        adjustment_note: null,
+        refund_amount: "0.00",
+        send_to_zatca: false,
+        rewash_order: false,
+        customer_complaint: null,
+        parent_order_id: null,
+        internal_status: null,
+        adjustment_request: null,
+        adjustment_order: false,
+        tax_percentage: "8.0%",
+        driver_account_id: null,
+        driver_action: null,
+        driver_action_at: null,
+        driver_confirmed_at: null,
+        driver_order_changes: null,
+        pickup_date: null,
+        delivery_date: null,
+        status_plant: null,
+        placed_at: null,
+        invoice_receipt_pdf_url: null,
+        delivery_address: null,
+        order_items: [],
+        order_transactions: [],
+        order_created_by: {
+          id: 1288,
+          first_name: "peta",
+          last_name: "test",
+          full_name: "peta h",
+        },
+        currency: "SAR",
+        promo_code: null,
+        store_name: "Builder Store",
+        store_second_name: "",
+        name_translation: "Builder Store",
+        no_of_items: 0,
+        no_of_pieces: 0,
+        store_management: {
+          data: {
+            id: "113",
+            type: "store_management_dropdown",
+            attributes: {
+              id: 113,
+              store_name: "Builder Store",
+              name_translation: "Builder Store",
+            },
+          },
+        },
+        invoice_pdf_url: null,
+        total_upcharge_amount: "0.00",
+        driver_account: null,
+        price_list_name: "Master Price List",
+      },
+      cleaning_order: null,
+      saved_notes: null,
+    },
+  },
+};
+
+const customerSearchWithoutOrderResponse = {
+  data: {
+    id: "1356",
+    type: "web_customer",
+    attributes: {
+      full_name: "Pritesh Patel",
+      activated: true,
+      email: "priteshpatel@gmail.com",
+      date_of_birth: null,
+      phone_number: 560091202,
+      country_code: 966,
+      deactivated_platform_id: null,
+      deactivated_reason: null,
+      customer_profile: {
+        data: {
+          id: "968",
+          type: "web_customer_profile",
+          attributes: {
+            street_address: "",
+            city: null,
+            employee_id: "",
+            customer_id: "A4nz0ACL",
+            post_code: "",
+            business_id: null,
+            price_list: {
+              data: {
+                id: "35",
+                type: "price_list_dropdown",
+                attributes: {
+                  id: 35,
+                  name: "Master Price List",
+                  price_list_type: "Store",
+                  is_master_price_list: true,
+                },
+              },
+            },
+            notes: "",
+            gender_id: null,
+            private_note: "",
+            customer_type: null,
+            profession: { data: null },
+            organisation_tax: { data: null },
+            payment: { id: null, name: null },
+            organization: { data: null },
+            region: {
+              data: {
+                id: "93",
+                type: "region_dropdown",
+                attributes: { id: 93, branch_name: "pune", name: "pune" },
+              },
+            },
+          },
+        },
+      },
+      user_addresses: {
+        data: [],
+      },
+      customer_preferences_attributes: null,
+      order: null,
+      cleaning_order: null,
+      saved_notes: null,
+    },
+  },
+};
+
+const orderUpdateResp = {
+  data: {
+    id: "5983",
+    type: "order",
+    attributes: {
+      id: 5983,
+      order_number: "OD00005577",
+      account_id: 1734,
+      sub_total: "0.00",
+      total: "0.00",
+      status: "in_cart",
+      applied_discount: "0.00",
+      cancellation_reason: null,
+      tax_charges: "0.0",
+      shipping_charge: null,
+      shipping_discount: null,
+      shipping_total: null,
+      total_tax: "0.00",
+      created_at: "2024-06-20T08:26:37.148+03:00",
+      updated_at: "2024-06-20T08:26:37.437+03:00",
+      save_for_future: false,
+      notes: "",
+      promo_code_id: null,
+      store_management_id: 75,
+      is_quick_drop: true,
+      tax_included_in_product_price: false,
+      address_id: null,
+      is_mobile: false,
+      paid_at: null,
+      adjustment_reason: null,
+      adjustment_note: null,
+      refund_amount: "0.00",
+      send_to_zatca: false,
+      rewash_order: false,
+      customer_complaint: null,
+      parent_order_id: null,
+      internal_status: null,
+      adjustment_request: null,
+      adjustment_order: false,
+      tax_percentage: "12.0%",
+      driver_account_id: null,
+      driver_action: null,
+      driver_action_at: null,
+      driver_confirmed_at: null,
+      driver_order_changes: null,
+      pickup_date: null,
+      delivery_date: null,
+      status_plant: null,
+      placed_at: null,
+      invoice_receipt_pdf_url: null,
+      delivery_address: null,
+      order_items: [
+        {
+          id: "11159",
+          type: "order_item",
+          attributes: {
+            id: 11159,
+            order_management_order_id: 5983,
+            quantity: 3,
+            catalogue_id: null,
+            catalogue_variant_id: null,
+            customer_preference_id: null,
+            preference_id: null,
+            service_id: null,
+            parent_catalogue_id: null,
+            specifications: null,
+            category_id: null,
+            no_of_pieces: 3,
+            no_of_tags: 3,
+            tag_numbers: [],
+            notes: null,
+            actual_price: null,
+            actual_total_price: null,
+            parent_order_item_id: null,
+            new_quantity: null,
+            generate_tag_number: true,
+            updated_by_driver: false,
+            height: "0.0",
+            width: "0.0",
+            weight: "0.0",
+            unit_price: "0.00",
+            total_price: "0.00",
+            upcharge_price: "0.00",
+            catalogue: {},
+            product_image: null,
+            preference: null,
+            service: null,
+            upcharge_list_ids: [],
+            parent_order_qty: null,
+            category_name: null,
+          },
+        },
+      ],
+      customer: {
+        id: 1734,
+        full_phone_number: "966560091208",
+        email: "priteshcustomer@gmail.com",
+        full_name: "Pritesh Customer 1",
+        business: "Laundry",
+        full_address: "Surat, Gujarat, Abha",
+      },
+      order_transactions: [],
+      order_created_by: {
+        id: 1288,
+        first_name: "peta",
+        last_name: "test",
+        full_name: "peta h",
+      },
+      currency: "SAR",
+      promo_code: null,
+      store_name: "Riyadh store",
+      store_second_name: null,
+      name_translation: "Riyadh store",
+      no_of_items: 3,
+      no_of_pieces: 3,
+      store_management: {
+        data: {
+          id: "75",
+          type: "store_management_dropdown",
+          attributes: {
+            id: 75,
+            store_name: "Riyadh store",
+            name_translation: "Riyadh store",
+          },
+        },
+      },
+      invoice_pdf_url: null,
+      total_upcharge_amount: "0.00",
+      driver_account: null,
+      price_list_name: "Master Price List",
+    },
+  },
+};
+
+const orderUpdateResp2 = {
+  data: {
+    id: "5983",
+    type: "order",
+    attributes: {
+      id: 5983,
+      order_number: "OD00005577",
+      account_id: 1734,
+      sub_total: "0.00",
+      total: "0.00",
+      status: "in_cart",
+      applied_discount: "0.00",
+      cancellation_reason: null,
+      tax_charges: "0.0",
+      shipping_charge: null,
+      shipping_discount: null,
+      shipping_total: null,
+      total_tax: "0.00",
+      created_at: "2024-06-20T08:26:37.148+03:00",
+      updated_at: "2024-06-20T08:26:37.437+03:00",
+      save_for_future: false,
+      notes: "",
+      promo_code_id: null,
+      store_management_id: 75,
+      is_quick_drop: true,
+      tax_included_in_product_price: false,
+      address_id: null,
+      is_mobile: false,
+      paid_at: null,
+      adjustment_reason: null,
+      adjustment_note: null,
+      refund_amount: "0.00",
+      send_to_zatca: false,
+      rewash_order: false,
+      customer_complaint: null,
+      parent_order_id: null,
+      internal_status: null,
+      adjustment_request: null,
+      adjustment_order: false,
+      tax_percentage: "12.0%",
+      driver_account_id: null,
+      driver_action: null,
+      driver_action_at: null,
+      driver_confirmed_at: null,
+      driver_order_changes: null,
+      pickup_date: null,
+      delivery_date: null,
+      status_plant: null,
+      placed_at: null,
+      invoice_receipt_pdf_url: null,
+      delivery_address: null,
+      order_items: [
+        {
+          id: "11159",
+          type: "order_item",
+          attributes: {
+            id: 11159,
+            order_management_order_id: 5983,
+            quantity: 3,
+            catalogue_id: null,
+            catalogue_variant_id: null,
+            customer_preference_id: null,
+            preference_id: null,
+            service_id: null,
+            parent_catalogue_id: null,
+            specifications: null,
+            category_id: null,
+            no_of_pieces: 3,
+            no_of_tags: 3,
+            tag_numbers: [],
+            notes: null,
+            actual_price: null,
+            actual_total_price: null,
+            parent_order_item_id: null,
+            new_quantity: null,
+            generate_tag_number: true,
+            updated_by_driver: false,
+            height: "0.0",
+            width: "0.0",
+            weight: "0.0",
+            unit_price: "0.00",
+            total_price: "0.00",
+            upcharge_price: "0.00",
+            catalogue: {},
+            product_image: null,
+            preference: null,
+            service: null,
+            upcharge_list_ids: [],
+            parent_order_qty: null,
+            category_name: null,
+          },
+        },
+      ],
+      customer: {
+        id: 1734,
+        full_phone_number: "966560091208",
+        email: "priteshcustomer@gmail.com",
+        full_name: "Pritesh Customer 1",
+        business: "Laundry",
+        full_address: "Surat, Gujarat, Abha",
+      },
+      order_transactions: [],
+      order_created_by: {
+        id: 1288,
+        first_name: "peta",
+        last_name: "test",
+        full_name: "peta h",
+      },
+      currency: "SAR",
+      promo_code: null,
+      store_name: "Riyadh store",
+      store_second_name: null,
+      name_translation: "Riyadh store",
+      no_of_items: 3,
+      no_of_pieces: 3,
+      store_management: {
+        data: {
+          id: "75",
+          type: "store_management_dropdown",
+          attributes: {
+            id: 75,
+            store_name: "Riyadh store",
+            name_translation: "Riyadh store",
+          },
+        },
+      },
+      invoice_pdf_url: null,
+      total_upcharge_amount: "0.00",
+      driver_account: null,
+      price_list_name: "Master Price List",
+    },
+  },
+};
+
+const orderUpdateResp3 = {
+  data: {
+    id: "5983",
+    type: "order",
+    attributes: {
+      id: 5983,
+      order_number: "OD000055778",
+      account_id: 1734,
+      sub_total: "0.00",
+      total: "0.00",
+      status: "placed",
+      applied_discount: "0.00",
+      cancellation_reason: null,
+      tax_charges: "0.0",
+      shipping_charge: null,
+      shipping_discount: null,
+      shipping_total: null,
+      total_tax: "0.00",
+      created_at: "2024-06-20T08:26:37.148+03:00",
+      updated_at: "2024-06-20T08:26:37.437+03:00",
+      save_for_future: false,
+      notes: "",
+      promo_code_id: null,
+      store_management_id: 75,
+      is_quick_drop: false,
+      tax_included_in_product_price: false,
+      address_id: null,
+      is_mobile: false,
+      paid_at: null,
+      adjustment_reason: null,
+      adjustment_note: null,
+      refund_amount: "0.00",
+      send_to_zatca: false,
+      rewash_order: false,
+      customer_complaint: null,
+      parent_order_id: null,
+      internal_status: null,
+      adjustment_request: null,
+      adjustment_order: false,
+      tax_percentage: "12.0%",
+      driver_account_id: null,
+      driver_action: null,
+      driver_action_at: null,
+      driver_confirmed_at: null,
+      driver_order_changes: null,
+      pickup_date: null,
+      delivery_date: null,
+      status_plant: null,
+      placed_at: null,
+      invoice_receipt_pdf_url: null,
+      delivery_address: null,
+      order_items: [
+        {
+          id: "11159",
+          type: "order_item",
+          attributes: {
+            id: 11159,
+            order_management_order_id: 5983,
+            quantity: 3,
+            catalogue_id: null,
+            catalogue_variant_id: null,
+            customer_preference_id: null,
+            preference_id: null,
+            service_id: null,
+            parent_catalogue_id: null,
+            specifications: null,
+            category_id: null,
+            no_of_pieces: 3,
+            no_of_tags: 3,
+            tag_numbers: [],
+            notes: null,
+            actual_price: null,
+            actual_total_price: null,
+            parent_order_item_id: null,
+            new_quantity: null,
+            generate_tag_number: true,
+            updated_by_driver: false,
+            height: "0.0",
+            width: "0.0",
+            weight: "0.0",
+            unit_price: "0.00",
+            total_price: "0.00",
+            upcharge_price: "0.00",
+            catalogue: {},
+            product_image: null,
+            preference: null,
+            service: null,
+            upcharge_list_ids: [],
+            parent_order_qty: null,
+            category_name: null,
+          },
+        },
+      ],
+      customer: {
+        id: 1734,
+        full_phone_number: "966560091208",
+        email: "priteshcustomer@gmail.com",
+        full_name: "Pritesh Customer 1",
+        business: "Laundry",
+        full_address: "Surat, Gujarat, Abha",
+      },
+      order_transactions: [],
+      order_created_by: {
+        id: 1288,
+        first_name: "peta",
+        last_name: "test",
+        full_name: "peta h",
+      },
+      currency: "SAR",
+      promo_code: null,
+      store_name: "Riyadh store",
+      store_second_name: null,
+      name_translation: "Riyadh store",
+      no_of_items: 3,
+      no_of_pieces: 3,
+      store_management: {
+        data: {
+          id: "75",
+          type: "store_management_dropdown",
+          attributes: {
+            id: 75,
+            store_name: "Riyadh store",
+            name_translation: "Riyadh store",
+          },
+        },
+      },
+      invoice_pdf_url: null,
+      total_upcharge_amount: "0.00",
+      driver_account: null,
+      price_list_name: "Master Price List",
+    },
+  },
+};
+
+
+
+const preferenceCustomer = {
+  id: "1481",
+  attributes: {
+    full_name: "Toi",
+    country_code: 966,
+    phone_number: 567897868,
+  },
+};
+
+function getMockFunction(request: IRequest) {
+  const { url, headers } = request;
+  const token = headers.token;
+
+  switch (url) {
+    case "/account_block/customers/auto_complete?full_phone_number=966560091201":
+    case "/account_block/customers/auto_complete?full_phone_number=966560091203":
+    case "/account_block/customers/auto_complete?full_phone_number=966560091205":
+      return {
+        customer: [
+          {
+            id: 1356,
+            full_phone_number: "966560091201",
+            country_code: 966,
+            phone_number: 560091201,
+            email: "pritesh@gmail.com",
+            full_name: "Pritesh Makasana",
+          },
+          {
+            id: 1357,
+            full_phone_number: "966560091203",
+            country_code: 966,
+            phone_number: 560091203,
+            email: "priteshpatel@gmail.com",
+            full_name: "Pritesh Patel",
+          },
+          {
+            id: 1358,
+            full_phone_number: "966560091205",
+            country_code: 966,
+            phone_number: 560091205,
+            email: "priteshpatel5@gmail.com",
+            full_name: "Pritesh5 Patel",
+          },
+        ],
+        status: 200,
+      };
+    case "/account_block/customers/auto_complete?full_phone_number=966560091202":
+      return {
+        customer: [],
+        status: 200,
+      };
+    case "//account_block/web_customers/search_customer_account?full_phone_number=966560091208&cart_order_required=true&store_id=null":
+    case "//account_block/web_customers/search_customer_account?full_phone_number=966560091201&cart_order_required=true&store_id=113":
+    case "//account_block/web_customers/search_customer_account?full_phone_number=966560091201&cart_order_required=true&store_id=66":
+      return customerSearchResponse;
+    case "//account_block/web_customers/search_customer_account?full_phone_number=966560091208&cart_order_required=true&store_id=null":
+    case "//account_block/web_customers/search_customer_account?full_phone_number=966560091203&cart_order_required=true&store_id=66":
+      return customerSearchWithoutOrderResponse;
+    case "//account_block/web_customers/search_customer_account?full_phone_number=966560091208&cart_order_required=true&store_id=null":
+    case "//account_block/web_customers/search_customer_account?full_phone_number=966560091205&cart_order_required=true&store_id=66":
+      return customerResponseWithJeansCatalogue;
+    case "//bx_block_price_list/price_lists?token=token&dropdown=true":
+    case "//bx_block_price_list/price_lists?page_no=1&per_page=10&dropdown=true&filter_by[name]=Master Price List":
+      return {
+        data: [
+          {
+            id: "35",
+            type: "price_list_dropdown",
+            attributes: {
+              id: 35,
+              name: "Master Price List",
+              price_list_type: "Store",
+              is_master_price_list: true,
+            },
+          },
+        ],
+      };
+    case "//bx_block_city/cities":
+      return {
+        cities: [
+          {
+            id: 20,
+            name_en: "Abha",
+            name_ar: "أبها",
+            name: "Abha",
+          },
+          {
+            id: 48,
+            name_en: "Abqaiq",
+            name_ar: "أبقيق",
+            name: "Abqaiq",
+          },
+        ],
+      };
+    case "//bx_block_categories/services?dropdown=true&product_id=undefined":
+      return {
+        data: [],
+      };
+    case "/bx_block_catalogue/catalogues_variants?page_no=1&price_list_id=35":
+      return {
+        data: [
+          {
+            id: "298",
+            type: "catalogue_variant",
+            attributes: {
+              id: 298,
+              price_list: {
+                id: 35,
+                name: "Master Price List",
+                created_at: "2023-07-12T06:09:13.293+03:00",
+                updated_at: "2023-07-12T06:09:13.293+03:00",
+                product_currency_id: "SAR",
+                tax_type: "on_top_of_product_price",
+                activated: true,
+                price_list_type: "Store",
+                price_list_to_copy: null,
+                add_by: null,
+              },
+              pieces: null,
+              active: true,
+              created_at: "2023-08-18T11:37:26.643+03:00",
+              updated_at: "2023-08-22T11:52:09.183+03:00",
+              catalogue: {
+                id: "175",
+                type: "catalogue_dropdown",
+                attributes: {
+                  id: 175,
+                  product_name: "Suits",
+                  product_second_name: "ST",
+                  name: "Suits",
+                },
+              },
+              name: "Suits",
+              image: {
+                id: 169,
+                image:
+                  "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/nldqn0eum4hw7nvgvfjynmo3ogpf",
+              },
+              measurement: {
+                id: 1,
+                value: "Weight",
+              },
+              product_currency_id: "ريال",
+              catalogue_variants_services: {
+                data: [
+                  {
+                    id: "686869",
+                    type: "catalogue_service",
+                    attributes: {
+                      id: 686869,
+                      price: "110.00",
+                      catalogue_variant_id: 298,
+                      default: false,
+                      currency: "SAR",
+                      service: {
+                        data: {
+                          id: "176",
+                          type: "service",
+                          attributes: {
+                            id: 176,
+                            name: "Iron",
+                            second_name: "IR",
+                            short_name: "II",
+                            icon_id: 249,
+                            active: true,
+                            online_order: true,
+                            order_number: 3,
+                            icon: {
+                              data: {
+                                id: "249",
+                                type: "gallery_icon",
+                                attributes: {
+                                  id: 249,
+                                  image:
+                                    "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/6kqq9lsfcdp56hnyue21fe996dcm/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22image.jpg%22%3B%20filename%2A%3DUTF-8%27%27image.jpg&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=2c70501c1d4f0543e487949521d0093315c321a76ee2f57202a1f913cb5d3cf3",
+                                  name: "Pressing",
+                                  second_name: "PS",
+                                  image_type: "icon",
+                                  name_translation: "Pressing",
+                                },
+                              },
+                            },
+                            sections: {
+                              data: [
+                                {
+                                  id: "8",
+                                  type: "category",
+                                  attributes: {
+                                    id: 8,
+                                    section_name: "Blankets",
+                                    section_second_name: "sdfdwdf",
+                                    active: true,
+                                    online: true,
+                                    order_number: 27,
+                                    created_at: "2023-04-11T08:48:10.662+03:00",
+                                    updated_at: "2023-09-26T12:35:52.708+03:00",
+                                    model_name: "BxBlockCategories::Category",
+                                    icon: {
+                                      data: {
+                                        id: "251",
+                                        type: "gallery_icon",
+                                        attributes: {
+                                          id: 251,
+                                          image:
+                                            "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/ldyq3qnbzxswfkmhodv7osljywn5/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22image_express%20charge.png%22%3B%20filename%2A%3DUTF-8%27%27image_express%2520charge.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=d926e3e4e8934476168aaa3cfd303ff55f8e6a7d47595128b61e976cc1f08050",
+                                          name: "Express Wash",
+                                          second_name: "EW",
+                                          image_type: "icon",
+                                          name_translation: "Express Wash",
+                                        },
+                                      },
+                                    },
+                                    preference: {
+                                      data: {
+                                        id: "125",
+                                        type: "preference_list_dropdown",
+                                        attributes: {
+                                          id: 125,
+                                          preference_first_name: "Folded",
+                                          icon_id: 262,
+                                          gallery_icon: {
+                                            id: 262,
+                                            image:
+                                              "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/rje94lsimdge3qvfqxurn0f3obb8",
+                                            name_translation: "إصلاح",
+                                          },
+                                          name: "مطوية",
+                                        },
+                                      },
+                                    },
+                                    name: "Blankets",
+                                  },
+                                },
+                                {
+                                  id: "134",
+                                  type: "category",
+                                  attributes: {
+                                    id: 134,
+                                    section_name: "Kids",
+                                    section_second_name: "أطفال",
+                                    active: true,
+                                    online: true,
+                                    order_number: 23,
+                                    created_at: "2023-08-18T11:32:12.871+03:00",
+                                    updated_at: "2023-10-12T13:29:41.674+03:00",
+                                    model_name: "BxBlockCategories::Category",
+                                    icon: {
+                                      data: {
+                                        id: "251",
+                                        type: "gallery_icon",
+                                        attributes: {
+                                          id: 251,
+                                          image:
+                                            "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/ldyq3qnbzxswfkmhodv7osljywn5/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22image_express%20charge.png%22%3B%20filename%2A%3DUTF-8%27%27image_express%2520charge.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=d926e3e4e8934476168aaa3cfd303ff55f8e6a7d47595128b61e976cc1f08050",
+                                          name: "Express Wash",
+                                          second_name: "EW",
+                                          image_type: "icon",
+                                          name_translation: "Express Wash",
+                                        },
+                                      },
+                                    },
+                                    preference: {
+                                      data: {
+                                        id: "126",
+                                        type: "preference_list_dropdown",
+                                        attributes: {
+                                          id: 126,
+                                          preference_first_name: "Boxed",
+                                          icon_id: 237,
+                                          gallery_icon: {
+                                            id: 237,
+                                            image:
+                                              "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/qe5kq9aj252vqlfhsr7imvdfa7rz",
+                                            name_translation: "bxd",
+                                          },
+                                          name: "bxdsg",
+                                        },
+                                      },
+                                    },
+                                    name: "Kids",
+                                  },
+                                },
+                                {
+                                  id: "133",
+                                  type: "category",
+                                  attributes: {
+                                    id: 133,
+                                    section_name: "Men",
+                                    section_second_name: "Men",
+                                    active: true,
+                                    online: true,
+                                    order_number: 22,
+                                    created_at: "2023-08-18T11:31:59.762+03:00",
+                                    updated_at: "2023-09-26T12:35:28.042+03:00",
+                                    model_name: "BxBlockCategories::Category",
+                                    icon: {
+                                      data: {
+                                        id: "207",
+                                        type: "gallery_icon",
+                                        attributes: {
+                                          id: 207,
+                                          image:
+                                            "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/dkszd1spiousx2obweoorqszpoe2/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22icon%22%3B%20filename%2A%3DUTF-8%27%27icon&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=a83283aec8d7b6bf9874e825464ae98cb89f4af88d5cb3c494b76a67582498ee",
+                                          name: "Super Admin",
+                                          second_name: "Icon",
+                                          image_type: "icon",
+                                          name_translation: "Super Admin",
+                                        },
+                                      },
+                                    },
+                                    preference: {
+                                      data: {
+                                        id: "126",
+                                        type: "preference_list_dropdown",
+                                        attributes: {
+                                          id: 126,
+                                          preference_first_name: "Boxed",
+                                          icon_id: 237,
+                                          gallery_icon: {
+                                            id: 237,
+                                            image:
+                                              "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/qe5kq9aj252vqlfhsr7imvdfa7rz",
+                                            name_translation: "bxd",
+                                          },
+                                          name: "bxdsg",
+                                        },
+                                      },
+                                    },
+                                    name: "Men",
+                                  },
+                                },
+                                {
+                                  id: "132",
+                                  type: "category",
+                                  attributes: {
+                                    id: 132,
+                                    section_name: "Women",
+                                    section_second_name: "نحيف",
+                                    active: true,
+                                    online: true,
+                                    order_number: 21,
+                                    created_at: "2023-08-18T11:31:46.974+03:00",
+                                    updated_at: "2023-10-20T10:58:56.223+03:00",
+                                    model_name: "BxBlockCategories::Category",
+                                    icon: {
+                                      data: {
+                                        id: "250",
+                                        type: "gallery_icon",
+                                        attributes: {
+                                          id: 250,
+                                          image:
+                                            "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/mc8mm0a7odj0r464sl1vinfpoad4/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22image_folded%20%25281%2529.png%22%3B%20filename%2A%3DUTF-8%27%27image_folded%2520%25281%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=b34f26f771bf535b189971645a6148eacf6485e50e1ebc4153906331fb88821e",
+                                          name: "Fold",
+                                          second_name: "Fld",
+                                          image_type: "icon",
+                                          name_translation: "Fold",
+                                        },
+                                      },
+                                    },
+                                    preference: {
+                                      data: {
+                                        id: "125",
+                                        type: "preference_list_dropdown",
+                                        attributes: {
+                                          id: 125,
+                                          preference_first_name: "Folded",
+                                          icon_id: 262,
+                                          gallery_icon: {
+                                            id: 262,
+                                            image:
+                                              "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/rje94lsimdge3qvfqxurn0f3obb8",
+                                            name_translation: "إصلاح",
+                                          },
+                                          name: "مطوية",
+                                        },
+                                      },
+                                    },
+                                    name: "Women",
+                                  },
+                                },
+                              ],
+                            },
+                            name_translation: "Iron",
+                          },
+                        },
+                      },
+                    },
+                  },
+                  {
+                    id: "686868",
+                    type: "catalogue_service",
+                    attributes: {
+                      id: 686868,
+                      price: "100.00",
+                      catalogue_variant_id: 298,
+                      default: false,
+                      currency: "SAR",
+                      service: {
+                        data: {
+                          id: "182",
+                          type: "service",
+                          attributes: {
+                            id: 182,
+                            name: "Wash",
+                            second_name: "غسل",
+                            short_name: "wsh",
+                            icon_id: 159,
+                            active: true,
+                            online_order: false,
+                            order_number: 6,
+                            icon: {
+                              data: {
+                                id: "159",
+                                type: "gallery_icon",
+                                attributes: {
+                                  id: 159,
+                                  image:
+                                    "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/x8y7pbgmg1dckkl0k7wdififp9kf/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22washing%20Clothes.png%22%3B%20filename%2A%3DUTF-8%27%27washing%2520Clothes.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=e4a340d66ec1e7aa3c5116a8fe2d03f57518560ba0396d94967596d0d9a42bbf",
+                                  name: "Washing Clothes",
+                                  second_name: "Washing Clothes",
+                                  image_type: "icon",
+                                  name_translation: "Washing Clothes",
+                                },
+                              },
+                            },
+                            sections: {
+                              data: [
+                                {
+                                  id: "134",
+                                  type: "category",
+                                  attributes: {
+                                    id: 134,
+                                    section_name: "Kids",
+                                    section_second_name: "أطفال",
+                                    active: true,
+                                    online: true,
+                                    order_number: 23,
+                                    created_at: "2023-08-18T11:32:12.871+03:00",
+                                    updated_at: "2023-10-12T13:29:41.674+03:00",
+                                    model_name: "BxBlockCategories::Category",
+                                    icon: {
+                                      data: {
+                                        id: "251",
+                                        type: "gallery_icon",
+                                        attributes: {
+                                          id: 251,
+                                          image:
+                                            "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/ldyq3qnbzxswfkmhodv7osljywn5/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22image_express%20charge.png%22%3B%20filename%2A%3DUTF-8%27%27image_express%2520charge.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=d926e3e4e8934476168aaa3cfd303ff55f8e6a7d47595128b61e976cc1f08050",
+                                          name: "Express Wash",
+                                          second_name: "EW",
+                                          image_type: "icon",
+                                          name_translation: "Express Wash",
+                                        },
+                                      },
+                                    },
+                                    preference: {
+                                      data: {
+                                        id: "126",
+                                        type: "preference_list_dropdown",
+                                        attributes: {
+                                          id: 126,
+                                          preference_first_name: "Boxed",
+                                          icon_id: 237,
+                                          gallery_icon: {
+                                            id: 237,
+                                            image:
+                                              "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/qe5kq9aj252vqlfhsr7imvdfa7rz",
+                                            name_translation: "bxd",
+                                          },
+                                          name: "bxdsg",
+                                        },
+                                      },
+                                    },
+                                    name: "Kids",
+                                  },
+                                },
+                                {
+                                  id: "133",
+                                  type: "category",
+                                  attributes: {
+                                    id: 133,
+                                    section_name: "Men",
+                                    section_second_name: "Men",
+                                    active: true,
+                                    online: true,
+                                    order_number: 22,
+                                    created_at: "2023-08-18T11:31:59.762+03:00",
+                                    updated_at: "2023-09-26T12:35:28.042+03:00",
+                                    model_name: "BxBlockCategories::Category",
+                                    icon: {
+                                      data: {
+                                        id: "207",
+                                        type: "gallery_icon",
+                                        attributes: {
+                                          id: 207,
+                                          image:
+                                            "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/dkszd1spiousx2obweoorqszpoe2/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22icon%22%3B%20filename%2A%3DUTF-8%27%27icon&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=a83283aec8d7b6bf9874e825464ae98cb89f4af88d5cb3c494b76a67582498ee",
+                                          name: "Super Admin",
+                                          second_name: "Icon",
+                                          image_type: "icon",
+                                          name_translation: "Super Admin",
+                                        },
+                                      },
+                                    },
+                                    preference: {
+                                      data: {
+                                        id: "126",
+                                        type: "preference_list_dropdown",
+                                        attributes: {
+                                          id: 126,
+                                          preference_first_name: "Boxed",
+                                          icon_id: 237,
+                                          gallery_icon: {
+                                            id: 237,
+                                            image:
+                                              "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/qe5kq9aj252vqlfhsr7imvdfa7rz",
+                                            name_translation: "bxd",
+                                          },
+                                          name: "bxdsg",
+                                        },
+                                      },
+                                    },
+                                    name: "Men",
+                                  },
+                                },
+                                {
+                                  id: "132",
+                                  type: "category",
+                                  attributes: {
+                                    id: 132,
+                                    section_name: "Women",
+                                    section_second_name: "نحيف",
+                                    active: true,
+                                    online: true,
+                                    order_number: 21,
+                                    created_at: "2023-08-18T11:31:46.974+03:00",
+                                    updated_at: "2023-10-20T10:58:56.223+03:00",
+                                    model_name: "BxBlockCategories::Category",
+                                    icon: {
+                                      data: {
+                                        id: "250",
+                                        type: "gallery_icon",
+                                        attributes: {
+                                          id: 250,
+                                          image:
+                                            "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/mc8mm0a7odj0r464sl1vinfpoad4/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22image_folded%20%25281%2529.png%22%3B%20filename%2A%3DUTF-8%27%27image_folded%2520%25281%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=b34f26f771bf535b189971645a6148eacf6485e50e1ebc4153906331fb88821e",
+                                          name: "Fold",
+                                          second_name: "Fld",
+                                          image_type: "icon",
+                                          name_translation: "Fold",
+                                        },
+                                      },
+                                    },
+                                    preference: {
+                                      data: {
+                                        id: "125",
+                                        type: "preference_list_dropdown",
+                                        attributes: {
+                                          id: 125,
+                                          preference_first_name: "Folded",
+                                          icon_id: 262,
+                                          gallery_icon: {
+                                            id: 262,
+                                            image:
+                                              "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/rje94lsimdge3qvfqxurn0f3obb8",
+                                            name_translation: "إصلاح",
+                                          },
+                                          name: "مطوية",
+                                        },
+                                      },
+                                    },
+                                    name: "Women",
+                                  },
+                                },
+                              ],
+                            },
+                            name_translation: "Wash",
+                          },
+                        },
+                      },
+                    },
+                  },
+                  {
+                    id: "686867",
+                    type: "catalogue_service",
+                    attributes: {
+                      id: 686867,
+                      price: "70.00",
+                      catalogue_variant_id: 298,
+                      default: true,
+                      currency: "SAR",
+                      service: {
+                        data: {
+                          id: "194",
+                          type: "service",
+                          attributes: {
+                            id: 194,
+                            name: "dry clean",
+                            second_name: "dc",
+                            short_name: "D",
+                            icon_id: 248,
+                            active: true,
+                            online_order: true,
+                            order_number: 14,
+                            icon: {
+                              data: {
+                                id: "248",
+                                type: "gallery_icon",
+                                attributes: {
+                                  id: 248,
+                                  image:
+                                    "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/k52dkvjw658yzwlfmvik3dadhm21/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22image.jpg%22%3B%20filename%2A%3DUTF-8%27%27image.jpg&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=40fef630a7804447de76ef5bef75cf00c65797fc3d841e6bd313e17d8e943900",
+                                  name: "Dryclean",
+                                  second_name: "dc",
+                                  image_type: "icon",
+                                  name_translation: "Dryclean",
+                                },
+                              },
+                            },
+                            sections: {
+                              data: [],
+                            },
+                            name_translation: "dry clean",
+                          },
+                        },
+                      },
+                    },
+                  },
+                  {
+                    id: "428",
+                    type: "catalogue_service",
+                    attributes: {
+                      id: 428,
+                      price: "10.00",
+                      catalogue_variant_id: 298,
+                      default: false,
+                      currency: "SAR",
+                      service: {
+                        data: {
+                          id: "189",
+                          type: "service",
+                          attributes: {
+                            id: 189,
+                            name: "Irwdwocn",
+                            second_name: "iron and washing",
+                            short_name: "Iron",
+                            icon_id: 253,
+                            active: false,
+                            online_order: false,
+                            order_number: 10,
+                            icon: {
+                              data: {
+                                id: "253",
+                                type: "gallery_icon",
+                                attributes: {
+                                  id: 253,
+                                  image:
+                                    "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/surke1d0twvhm9dkzoof0x0qnhxx/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22image.jpg%22%3B%20filename%2A%3DUTF-8%27%27image.jpg&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=31d33a8df54a35fa3c864a4f60b9a6a429f48d99203b20a57f941cd977625c5d",
+                                  name: "Special Wash",
+                                  second_name: "SP",
+                                  image_type: "icon",
+                                  name_translation: "Special Wash",
+                                },
+                              },
+                            },
+                            sections: {
+                              data: [
+                                {
+                                  id: "133",
+                                  type: "category",
+                                  attributes: {
+                                    id: 133,
+                                    section_name: "Men",
+                                    section_second_name: "Men",
+                                    active: true,
+                                    online: true,
+                                    order_number: 22,
+                                    created_at: "2023-08-18T11:31:59.762+03:00",
+                                    updated_at: "2023-09-26T12:35:28.042+03:00",
+                                    model_name: "BxBlockCategories::Category",
+                                    icon: {
+                                      data: {
+                                        id: "207",
+                                        type: "gallery_icon",
+                                        attributes: {
+                                          id: 207,
+                                          image:
+                                            "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/variants/dkszd1spiousx2obweoorqszpoe2/a7ff1143ffb8b1e95b2a221682bca3ff314cc2331f0fb218fa21ebdbc8fdd7d2?response-content-disposition=inline%3B%20filename%3D%22icon%22%3B%20filename%2A%3DUTF-8%27%27icon&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=hello%2F20240612%2Fbuilder-1%2Fs3%2Faws4_request&X-Amz-Date=20240612T115429Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=a83283aec8d7b6bf9874e825464ae98cb89f4af88d5cb3c494b76a67582498ee",
+                                          name: "Super Admin",
+                                          second_name: "Icon",
+                                          image_type: "icon",
+                                          name_translation: "Super Admin",
+                                        },
+                                      },
+                                    },
+                                    preference: {
+                                      data: {
+                                        id: "126",
+                                        type: "preference_list_dropdown",
+                                        attributes: {
+                                          id: 126,
+                                          preference_first_name: "Boxed",
+                                          icon_id: 237,
+                                          gallery_icon: {
+                                            id: 237,
+                                            image:
+                                              "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/qe5kq9aj252vqlfhsr7imvdfa7rz",
+                                            name_translation: "bxd",
+                                          },
+                                          name: "bxdsg",
+                                        },
+                                      },
+                                    },
+                                    name: "Men",
+                                  },
+                                },
+                              ],
+                            },
+                            name_translation: "Irwdwocn",
+                          },
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      };
+    case "/bx_block_categories/specifications?dropdown=true":
+      return {
+        data: [
+          {
+            id: "112",
+            type: "specification_dropdown",
+            attributes: {
+              id: 112,
+              name: "Material",
+              name_translation: "Material",
+            },
+          },
+        ],
+      };
+    case "//bx_block_drop_down/drop_down?module_name=Business":
+      return {
+        data: [
+          {
+            id: "38",
+            type: "drop_down",
+            attributes: {
+              id: 38,
+              label: "Laundry",
+              module_name: "Business",
+              created_at: "2023-07-21T18:27:39.575+03:00",
+              updated_at: "2023-07-21T18:27:39.575+03:00",
+              model_name: "BxBlockDropDown::DropDown",
+            },
+          },
+        ],
+      };
+    case "//bx_block_settings/payment_methods":
+      return {
+        status: 200,
+        data: [
+          {
+            id: 0,
+            name: "Cash",
+            second_name: "نقدي",
+            active: true,
+            created_at: "2023-07-17T12:48:30.045+03:00",
+            updated_at: "2023-11-21T09:55:00.023+03:00",
+            name_translation: "Cash",
+            attributes: {
+              icon: {
+                data: {
+                  id: 263,
+                  type: "gallery_icon",
+                  attributes: {
+                    id: 9,
+                    name: "cash icon new",
+                    second_name: "new",
+                    image_type: "icon",
+                    name_translation: "cash icon new",
+                    image:
+                      "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/qi2508jw36aw7lrty8qxsaqs8dru",
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: 2,
+            name: "Pay Later",
+            second_name: "نقدي",
+            active: true,
+            created_at: "2023-07-17T12:48:30.045+03:00",
+            updated_at: "2023-11-21T09:55:00.023+03:00",
+            name_translation: "Pay Later",
+            attributes: {
+              icon: {
+                data: {
+                  id: 263,
+                  type: "gallery_icon",
+                  attributes: {
+                    id: 9,
+                    name: "cash icon new",
+                    second_name: "new",
+                    image_type: "icon",
+                    name_translation: "cash icon new",
+                    image:
+                      "https://minio.b283543.dev.eastus.az.svc.builder/sbucket/qi2508jw36aw7lrty8qxsaqs8dru",
+                  },
+                },
+              },
+            },
+          },
+        ],
+      };
+    case "//account_block/professions?dropdown=true":
+      return {
+        data: [
+          {
+            id: "107",
+            type: "profession_dropdown",
+            attributes: {
+              id: 107,
+              profession_name: "manager 11",
+            },
+          },
+        ],
+      };
+    case "//account_block/organisations?dropdown=true":
+      return {
+        data: [
+          {
+            id: "145",
+            type: "organisation",
+            attributes: {
+              id: 145,
+              name: "test organisation1",
+              tax_number: "TAX1233",
+              active: false,
+            },
+          },
+        ],
+      };
+    case "//bx_block_drop_down/drop_down?module_name=Gender":
+      return {
+        data: [
+          {
+            id: "34",
+            type: "drop_down",
+            attributes: {
+              id: 34,
+              label: "male",
+              module_name: "Gender",
+              created_at: "2023-07-21T18:25:43.483+03:00",
+              updated_at: "2024-02-02T15:24:59.775+03:00",
+              model_name: "BxBlockDropDown::DropDown",
+            },
+          },
+        ],
+      };
+    case "//bx_block_order_management/orders/5913":
+    case "//bx_block_order_management/orders/new_order":
+    case "//bx_block_order_management/orders/5977":
+     if(token === "token10"){
+      return orderUpdateResp2;
+     }
+     else if (token === "token11"){
+      return orderUpdateResp3;
+     }else{
+       return orderUpdateResp;
+     } 
+    case "//account_block/web_customers?allow_access=true": {
+      return {
+        data: {
+          id: "1737",
+          type: "web_customer",
+          attributes: {
+            full_name: "Pritesh Customer 4",
+            activated: true,
+            email: null,
+            date_of_birth: null,
+            phone_number: 560092201,
+            country_code: 966,
+            deactivated_platform_id: null,
+            deactivated_reason: null,
+            customer_profile: {
+              data: {
+                id: "1250",
+                type: "web_customer_profile",
+                attributes: {
+                  street_address: null,
+                  city: null,
+                  employee_id: null,
+                  customer_id: "KRoyjEH8",
+                  post_code: null,
+                  business_id: null,
+                  price_list: {
+                    data: {
+                      id: "35",
+                      type: "price_list_dropdown",
+                      attributes: {
+                        id: 35,
+                        name: "Master Price List",
+                        price_list_type: "Store",
+                        is_master_price_list: true,
+                      },
+                    },
+                  },
+                  notes: null,
+                  gender_id: {
+                    id: 34,
+                    label: "male",
+                    module_name: "Gender",
+                  },
+                  private_note: null,
+                  customer_type: null,
+                  profession: {
+                    data: null,
+                  },
+                  organisation_tax: {
+                    data: null,
+                  },
+                  payment: {
+                    id: null,
+                    name: null,
+                  },
+                  organization: {
+                    data: null,
+                  },
+                  region: {
+                    data: null,
+                  },
+                },
+              },
+            },
+            user_addresses: {
+              data: [],
+            },
+            customer_preferences_attributes: null,
+            order: null,
+            cleaning_order: null,
+            saved_notes: null,
+          },
+        },
+      };
+    }
+    case "//bx_block_promo_codes/promo_codes/get_order_promo_codes?platform=Store&page_no=1&per_page=1000&order_id=5977":
+    case "//bx_block_promo_codes/promo_codes/get_order_promo_codes?platform=Store&page_no=1&per_page=1000&order_id=6155":
+      return {
+        data: [
+          {
+            saved_amount: "50.0",
+            discount: "100 SAR",
+            expiry_date: null,
+            min_order_amount: 200.0,
+            promo_expires: false,
+            promo_code: "AWNI63920",
+            description: "desc",
+            id: 198,
+            currency: "SAR",
+          },
+        ],
+        pagination: {
+          total_pages: 1,
+          total_count: 1,
+          current_page: 1,
+          next_page: null,
+          pervious_page: null,
+        },
+        status: 200,
+      };
+    case "//bx_block_settings/payment_methods":
+      return {
+        status: 200,
+        data: [
+          {
+            id: 0,
+            name: "Cash",
+            second_name: "نقدي",
+            active: true,
+            created_at: "2023-07-17T12:48:30.045+03:00",
+            updated_at: "2023-11-21T09:55:00.023+03:00",
+            name_translation: "Cash",
+            attributes: {
+              icon: {
+                data: {
+                  id: 263,
+                  type: "gallery_icon",
+                  attributes: {
+                    id: 9,
+                    name: "cash icon new",
+                    second_name: "new",
+                    image_type: "icon",
+                    name_translation: "cash icon new",
+                    image:
+                      "https://minio.b283543.dev.eastus.az.svc.builder.ai/sbucket/qi2508jw36aw7lrty8qxsaqs8dru",
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: 1,
+            name: "Pay Later",
+            second_name: "ادفع لاحقا",
+            active: true,
+            created_at: "2023-10-05T11:59:16.620+03:00",
+            updated_at: "2023-10-25T10:33:03.280+03:00",
+            name_translation: "Pay Later",
+            attributes: {
+              icon: {
+                data: {
+                  id: 251,
+                  type: "gallery_icon",
+                  attributes: {
+                    id: 9,
+                    name: "Express Wash",
+                    second_name: "EW",
+                    image_type: "icon",
+                    name_translation: "Express Wash",
+                    image:
+                      "https://minio.b283543.dev.eastus.az.svc.builder.ai/sbucket/ldyq3qnbzxswfkmhodv7osljywn5",
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: 9,
+            name: "Credit Card",
+            second_name: "بطاقة إئتمان",
+            active: true,
+            created_at: "2024-02-14T18:03:01.590+03:00",
+            updated_at: "2024-02-14T18:03:37.961+03:00",
+            name_translation: "Credit Card",
+            attributes: {
+              icon: {
+                data: {
+                  id: 263,
+                  type: "gallery_icon",
+                  attributes: {
+                    id: 9,
+                    name: "cash icon new",
+                    second_name: "new",
+                    image_type: "icon",
+                    name_translation: "cash icon new",
+                    image:
+                      "https://minio.b283543.dev.eastus.az.svc.builder.ai/sbucket/qi2508jw36aw7lrty8qxsaqs8dru",
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: 6,
+            name: "Pay Later",
+            second_name: "ادفع لاحقا",
+            active: true,
+            created_at: "2023-10-05T11:59:16.620+03:00",
+            updated_at: "2023-10-25T10:33:03.280+03:00",
+            name_translation: "Pay Later",
+            attributes: {
+              icon: {
+                data: {
+                  id: 251,
+                  type: "gallery_icon",
+                  attributes: {
+                    id: 9,
+                    name: "Express Wash",
+                    second_name: "EW",
+                    image_type: "icon",
+                    name_translation: "Express Wash",
+                    image:
+                      "https://minio.b283543.dev.eastus.az.svc.builder.ai/sbucket/ldyq3qnbzxswfkmhodv7osljywn5",
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: 5,
+            name: "Payment Link",
+            second_name: "رابط الدفع",
+            active: true,
+            created_at: "2023-10-05T11:58:58.797+03:00",
+            updated_at: "2023-10-25T10:35:06.588+03:00",
+            name_translation: "Payment Link",
+            attributes: {
+              icon: {
+                data: {
+                  id: 250,
+                  type: "gallery_icon",
+                  attributes: {
+                    id: 9,
+                    name: "Fold",
+                    second_name: "Fld",
+                    image_type: "icon",
+                    name_translation: "Fold",
+                    image:
+                      "https://minio.b283543.dev.eastus.az.svc.builder.ai/sbucket/mc8mm0a7odj0r464sl1vinfpoad4",
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: 8,
+            name: "POS Machine",
+            second_name: "آلة نقاط البيع",
+            active: true,
+            created_at: "2023-10-05T11:59:55.603+03:00",
+            updated_at: "2023-10-25T10:35:25.363+03:00",
+            name_translation: "POS Machine",
+            attributes: {
+              icon: {
+                data: {
+                  id: 250,
+                  type: "gallery_icon",
+                  attributes: {
+                    id: 9,
+                    name: "Fold",
+                    second_name: "Fld",
+                    image_type: "icon",
+                    name_translation: "Fold",
+                    image:
+                      "https://minio.b283543.dev.eastus.az.svc.builder.ai/sbucket/mc8mm0a7odj0r464sl1vinfpoad4",
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: 7,
+            name: "Store Pay",
+            second_name: "ادفع لاحقا",
+            active: true,
+            created_at: "2023-10-05T11:59:35.946+03:00",
+            updated_at: "2023-10-25T10:33:33.755+03:00",
+            name_translation: "Store Pay",
+            attributes: {
+              icon: {
+                data: {
+                  id: 250,
+                  type: "gallery_icon",
+                  attributes: {
+                    id: 9,
+                    name: "Fold",
+                    second_name: "Fld",
+                    image_type: "icon",
+                    name_translation: "Fold",
+                    image:
+                      "https://minio.b283543.dev.eastus.az.svc.builder.ai/sbucket/mc8mm0a7odj0r464sl1vinfpoad4",
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: 4,
+            name: "Wallets",
+            second_name: "محافظ",
+            active: true,
+            created_at: "2023-08-11T11:52:18.578+03:00",
+            updated_at: "2024-02-17T20:12:28.548+03:00",
+            name_translation: "Wallets",
+            attributes: {
+              icon: {
+                data: {
+                  id: 250,
+                  type: "gallery_icon",
+                  attributes: {
+                    id: 9,
+                    name: "Fold",
+                    second_name: "Fld",
+                    image_type: "icon",
+                    name_translation: "Fold",
+                    image:
+                      "https://minio.b283543.dev.eastus.az.svc.builder.ai/sbucket/mc8mm0a7odj0r464sl1vinfpoad4",
+                  },
+                },
+              },
+            },
+          },
+        ],
+      };
+    case "/bx_block_order_management/home_cleaning_orders/get_remaining_balance?id=5983&unpaid_amount=true":
+    case "/bx_block_order_management/home_cleaning_orders/get_remaining_balance?id=6155&unpaid_amount=true":
+      return { payable_balance: "291.60" };
+    case "/bx_block_order_management/home_cleaning_orders/apply_coupon":
+      return orderResponseWithDiscountResponse;
+    case "//bx_block_order_management/orders/6155":
+      if (token == "token2") return orderResponseWithPlacedInstatus;
+      return orderResponseWithCartInstatus;
+    case "/bx_block_order_management/home_cleaning_orders/add_payment_transactions":
+      return {
+        message: "Payment transaction added successfully",
+        payable_balance: "0.0",
+        data: {
+          data: [
+            {
+              id: "4700",
+              type: "order_transaction",
+              attributes: {
+                id: 4700,
+                account_id: 1730,
+                order_management_order_id: 6155,
+                amount: "237.60",
+                payment_method: {
+                  id: 2,
+                  name: "Cash",
+                  second_name: "نقدي",
+                  active: true,
+                  created_at: "2023-07-17T12:48:30.045+03:00",
+                  updated_at: "2023-11-21T09:55:00.023+03:00",
+                  name_translation: "Cash",
+                  attributes: {
+                    icon: {
+                      data: {
+                        id: 263,
+                        type: "gallery_icon",
+                        attributes: {
+                          id: 9,
+                          name: "cash icon new",
+                          second_name: "new",
+                          image_type: "icon",
+                          name_translation: "cash icon new",
+                          image:
+                            "https://minio.b283543.dev.eastus.az.svc.builder.ai/sbucket/qi2508jw36aw7lrty8qxsaqs8dru",
+                        },
+                      },
+                    },
+                  },
+                },
+                currency: "SAR",
+                store_management: {
+                  data: {
+                    id: "113",
+                    type: "store_management_dropdown",
+                    attributes: {
+                      id: 113,
+                      store_name: "Builder Store",
+                      name_translation: "Builder Store",
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        order_status: "placed",
+      };
+    case "/bx_block_regions/areas?dropdown=true&region_id=90":
+      return {
+        data: [
+          {
+            id: "125",
+            type: "area_dropdown",
+            attributes: {
+              id: 125,
+              area_name: "area individual role",
+            },
+          },
+        ],
+      };
+    case "/bx_block_regions/regions?dropdown=true":
+      return {
+        data: [
+          {
+            id: "90",
+            type: "region_dropdown",
+            attributes: {
+              id: 90,
+              branch_name: "Vadodara",
+              name: "Vadodara",
+            },
+          },
+          {
+            id: "",
+            type: "region_dropdown",
+            attributes: {
+              id: null,
+              branch_name: "Null",
+              name: "Null Name",
+            },
+          },
+          {
+            id: "88",
+            type: "region_dropdown",
+            attributes: {
+              id: 88,
+              branch_name: "test",
+              name: "test",
+            },
+          },
+          {
+            id: "87",
+            type: "region_dropdown",
+            attributes: {
+              id: 87,
+              branch_name: "Malaya",
+              name: "Malaya",
+            },
+          },
+          {
+            id: "86",
+            type: "region_dropdown",
+            attributes: {
+              id: 86,
+              branch_name: "ytry",
+              name: "ytry",
+            },
+          },
+          {
+            id: "83",
+            type: "region_dropdown",
+            attributes: {
+              id: 83,
+              branch_name: "Region for QA 2",
+              name: "Region for QA 2",
+            },
+          },
+          {
+            id: "82",
+            type: "region_dropdown",
+            attributes: {
+              id: 82,
+              branch_name: "Region With Extra",
+              name: "Region With Extra",
+            },
+          },
+          {
+            id: "81",
+            type: "region_dropdown",
+            attributes: {
+              id: 81,
+              branch_name: "Test Laundry",
+              name: "Test Laundry",
+            },
+          },
+          {
+            id: "80",
+            type: "region_dropdown",
+            attributes: {
+              id: 80,
+              branch_name: "Laundry Budiness 2",
+              name: "Laundry Budiness 2",
+            },
+          },
+          {
+            id: "79",
+            type: "region_dropdown",
+            attributes: {
+              id: 79,
+              branch_name: "RegionForQA",
+              name: "RegionForQA",
+            },
+          },
+          {
+            id: "78",
+            type: "region_dropdown",
+            attributes: {
+              id: 78,
+              branch_name: "Madhapur",
+              name: "Madhapur",
+            },
+          },
+          {
+            id: "71",
+            type: "region_dropdown",
+            attributes: {
+              id: 71,
+              branch_name: "test",
+              name: "test",
+            },
+          },
+          {
+            id: "68",
+            type: "region_dropdown",
+            attributes: {
+              id: 68,
+              branch_name: "michigan zen",
+              name: "michigan zen",
+            },
+          },
+          {
+            id: "67",
+            type: "region_dropdown",
+            attributes: {
+              id: 67,
+              branch_name: "Michigan",
+              name: "Michigan",
+            },
+          },
+          {
+            id: "66",
+            type: "region_dropdown",
+            attributes: {
+              id: 66,
+              branch_name: "Demo Region",
+              name: "Demo Region",
+            },
+          },
+          {
+            id: "65",
+            type: "region_dropdown",
+            attributes: {
+              id: 65,
+              branch_name: "Schaumburg",
+              name: "Schaumburg",
+            },
+          },
+          {
+            id: "64",
+            type: "region_dropdown",
+            attributes: {
+              id: 64,
+              branch_name: "test",
+              name: "test",
+            },
+          },
+          {
+            id: "62",
+            type: "region_dropdown",
+            attributes: {
+              id: 62,
+              branch_name: "NewRegionDelhi",
+              name: "NewRegionDelhi",
+            },
+          },
+          {
+            id: "61",
+            type: "region_dropdown",
+            attributes: {
+              id: 61,
+              branch_name: "SST01 region",
+              name: "SST01 region",
+            },
+          },
+          {
+            id: "60",
+            type: "region_dropdown",
+            attributes: {
+              id: 60,
+              branch_name: "Gachibowli ",
+              name: "Gachibowli ",
+            },
+          },
+          {
+            id: "44",
+            type: "region_dropdown",
+            attributes: {
+              id: 44,
+              branch_name: "Karnataka",
+              name: "Karnataka",
+            },
+          },
+          {
+            id: "42",
+            type: "region_dropdown",
+            attributes: {
+              id: 42,
+              branch_name: "Mysore",
+              name: "Mysore",
+            },
+          },
+          {
+            id: "29",
+            type: "region_dropdown",
+            attributes: {
+              id: 29,
+              branch_name: "Goa",
+              name: "Goa",
+            },
+          },
+          {
+            id: "28",
+            type: "region_dropdown",
+            attributes: {
+              id: 28,
+              branch_name: "Delhi",
+              name: "Delhi",
+            },
+          },
+          {
+            id: "5",
+            type: "region_dropdown",
+            attributes: {
+              id: 5,
+              branch_name: "Manali",
+              name: "Manali",
+            },
+          },
+          {
+            id: "4",
+            type: "region_dropdown",
+            attributes: {
+              id: 4,
+              branch_name: "Assam",
+              name: "Assam",
+            },
+          },
+          {
+            id: "3",
+            type: "region_dropdown",
+            attributes: {
+              id: 3,
+              branch_name: "Itanagar",
+              name: "Itanagar",
+            },
+          },
+        ],
+      };
+    case "/bx_block_store_management/store_managements?dropdown=true&area_id=125":
+      return {
+        data: [
+          {
+            id: "139",
+            type: "store_management_dropdown",
+            attributes: {
+              id: 139,
+              store_name: "aichi store",
+              name_translation: "aichi store",
+            },
+          },
+        ],
+      };
+  }
+}
+
+defineFeature(feature, (test) => {
+  let spyFetch = jest.spyOn(window, "fetch");
+  let screen: RenderResult;
+
+  beforeAll(() => {
+    InitializeMockResponses((request: IRequest) =>
+      getPageContainerMocks(request, getMockFunction)
+    );
+  });
+
+  beforeEach(() => {
+    jest.resetModules();
+    jest.doMock("react-native", () => ({ Platform: { OS: "web" } }));
+    jest.spyOn(helpers, "getOS").mockImplementation(() => "web");
+
+    jest.setTimeout(300000);
+    window.localStorage.setItem("token", "token");
+    jest.spyOn(utils, "getStorageData").mockImplementation((key, _) => {
+      switch (key) {
+        case "token":
+          return Promise.resolve("token");
+        default:
+          return Promise.resolve();
+      }
+    });
+    spyFetch = jest.spyOn(window, "fetch");
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  test("User navigates to ShoppingCart", ({ given, then }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    then("I can see the input", async () => {
+      const search_customer_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      expect(search_customer_input).toBeDefined();
+    });
+  });
+
+  test("User should able to change country code", ({ given, when, then }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I change country code input", async () => {
+      const country_code_input = await screen.findByTestId(
+        "field-country-code"
+      );
+      fireEvent.change(country_code_input, { target: { value: "+91" } });
+      expect(country_code_input).toHaveValue("+91");
+    });
+    then("I can see the country code has been changed", async () => {
+      const country_code_input = await screen.findByTestId(
+        "field-country-code"
+      );
+      expect(country_code_input).toHaveValue("+91");
+    });
+  });
+
+  test("User should able to search customer", ({ given, when, then }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I change customer phone number", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      fireEvent.change(mobile_number_input, { target: { value: "560091201" } });
+    });
+    then("I can see the customer name", async () => {
+      const customer = await screen.findByText("Pritesh Makasana - 560091201");
+      expect(customer).toBeDefined();
+    });
+    when("I select customer", async () => {
+      const customer = await screen.findByText("Pritesh Makasana - 560091201");
+      fireEvent.click(customer);
+    });
+    then("Value has been selected with customer", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      expect(mobile_number_input).toHaveValue("Pritesh Makasana - 560091201");
+    });
+    when("I passed empty value in mobile numbe", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      expect(mobile_number_input).toBeDefined();
+      fireEvent.change(mobile_number_input, { target: { value: "" } });
+    });
+    then("I can see empty input value", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      expect(mobile_number_input).toHaveValue("");
+    });
+  });
+
+  test("User should able not able to add customer with existing phone number", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I change customer phone number", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      fireEvent.change(mobile_number_input, { target: { value: "560091201" } });
+    });
+    then("I can see the customer name", async () => {
+      const customer = await screen.findByText("Pritesh Makasana - 560091201");
+      expect(customer).toBeDefined();
+    });
+    when("I select customer", async () => {
+      const customer = await screen.findByText("Pritesh Makasana - 560091201");
+      fireEvent.click(customer);
+    });
+    then("Value has been selected with customer", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      expect(mobile_number_input).toHaveValue("Pritesh Makasana - 560091201");
+    });
+    when("I click on add customer icon", async () => {
+      const add_customer_btn = await screen.findByTestId("btn-add-customer");
+      fireEvent.click(add_customer_btn);
+    });
+    then("I can see the error message", async () => {
+      const error_msg = screen.findByText(
+        "This phone number already belongs to a customer"
+      );
+      expect(error_msg).toBeDefined();
+      await new Promise((r) => setTimeout(r, 3500));
+    });
+  });
+
+  test("User should able not able to add customer with new phone number", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I change customer phone number", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      fireEvent.change(mobile_number_input, { target: { value: "560091202" } });
+    });
+    then("I can see the customer not found", async () => {
+      const customer_not_found = await screen.findByText("No customers found");
+      expect(customer_not_found).toBeDefined();
+    });
+    when("I click on add customer icon", async () => {
+      const add_customer_btn = await screen.findByTestId("btn-add-customer");
+      fireEvent.click(add_customer_btn);
+    });
+    then("I can see the add customer popver", async () => {
+      const customer_popver = await screen.findByText("Create New Customer");
+      expect(customer_popver).toBeDefined();
+
+      const cancel_btn = await screen.findByTestId("cancelBtn");
+      fireEvent.click(cancel_btn);
+    });
+    when("I am filling customer form and submit", async () => {
+      const add_customer_btn = await screen.findByTestId("btn-add-customer");
+      fireEvent.click(add_customer_btn);
+
+      const name_field = await screen.findByPlaceholderText("Enter Name");
+      fireEvent.change(name_field, { target: { value: "Pritesh Patel" } });
+
+      await onSelectAutoCompleteWithSearch(screen, "genderDropdown", "male");
+
+      // Search price list
+      await onSearchAutoCompleteAndSelectValue(
+        screen,
+        "price_list",
+        "Master Price List",
+        "35"
+      );
+
+      await onChangeReactDatePicker(screen, "price_list_expiry_date");
+
+      // I am select price list region
+      await onSelectAutoCompleteDropdownValue(
+        document,
+        screen,
+        "price_list_region_id",
+        "Vadodara"
+      );
+
+      // I am select price list area
+      await onSelectAutoCompleteDropdownValue(
+        document,
+        screen,
+        "price_list_area_id",
+        "area individual role"
+      );
+
+      // I am select price list store
+      await onSelectAutoCompleteDropdownValue(
+        document,
+        screen,
+        "price_list_store_id",
+        "aichi store"
+      );
+
+      const submitBtn = await screen.findByTestId("submitBtn");
+      fireEvent.click(submitBtn);
+    });
+    then("I can see customer created successfully", async () => {
+      await new Promise((r) => setTimeout(r, 2000));
+      const new_added_customer = await screen.findByText(
+        "Pritesh Patel - 560091202"
+      );
+      expect(new_added_customer).toBeDefined();
+    });
+  });
+
+  test.skip("User should able to view customer details", ({ given, when, then }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      window.localStorage.setItem("store_id", "113");
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I change customer phone number", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      fireEvent.change(mobile_number_input, { target: { value: "560091201" } });
+    });
+    then("I can see the customer name", async () => {
+      const customer = await screen.findByText("560091201 - Pritesh Makasana");
+      expect(customer).toBeDefined();
+    });
+    when("I select customer", async () => {
+      const customer = await screen.findByText("560091201 - Pritesh Makasana");
+      fireEvent.click(customer);
+    });
+    then("Value has been selected with customer", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      expect(mobile_number_input).toHaveValue("560091201 - Pritesh Makasana");
+    });
+    when("I click on view customer icon", async () => {
+      const view_button = await screen.findByTestId("btn-view-customer");
+      fireEvent.click(view_button);
+    });
+    then("I can see the view customer popup with details", async () => {
+      const view_customer_popup = await screen.findByRole("presentation");
+      const view_customer_modal = await within(view_customer_popup).findByText(
+        "Customer Information"
+      );
+      expect(view_customer_modal).toBeDefined();
+
+      const cancel_btn = await screen.findByTestId("cancleBtn");
+      fireEvent.click(cancel_btn);
+    });
+    then("I can see the customer details", async () => {
+      const view_button = await screen.findByTestId("btn-view-customer");
+      fireEvent.click(view_button);
+
+      const view_customer_popup = await screen.findByRole("presentation");
+      const email = await within(view_customer_popup).findByText(
+        "pritesh@gmail.com"
+      );
+      expect(email).toBeDefined();
+    });
+    when("I click on edit button", async () => {
+      const view_customer_popup = await screen.findByRole("presentation");
+      const edit_button = await within(view_customer_popup).findByTestId(
+        "editBtn"
+      );
+      fireEvent.click(edit_button);
+    });
+    then("I can navigate to edit customer", async () => {
+      const edit_customer_popup = await screen.findByRole("presentation");
+      const edit_customer = await within(edit_customer_popup).findByText(
+        "Edit Customer"
+      );
+      expect(edit_customer).toBeDefined();
+    });
+  });
+
+  test("User should able to select service from dropdown", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I select pickup service from dropdown", async () => {
+      await onGetSelectOptionsValues(screen, "service-dropdown", "pick_up");
+    });
+    then("I can see the pickup date picker render", async () => {
+      const pickup_datepicker = await screen.findByPlaceholderText(
+        "Select Pick up Date"
+      );
+      expect(pickup_datepicker).toBeDefined();
+    });
+    when("I select delivery service from dropdown", async () => {
+      await onGetSelectOptionsValues(screen, "service-dropdown", "delivery");
+    });
+    then("I can see the delivery date picker render", async () => {
+      const delivery_datepicker = await screen.findByPlaceholderText(
+        "Select Delivery Date"
+      );
+      expect(delivery_datepicker).toBeDefined();
+    });
+    when("I select pickup and delivery service from dropdown", async () => {
+      await onGetSelectOptionsValues(
+        screen,
+        "service-dropdown",
+        "pick_up_and_delivery"
+      );
+      let node = await screen.findByTestId("order-summary-total");
+      fireEvent.click(node);
+    });
+    then("I can see the pickup and delivery date picker render", async () => {
+      let node = await screen.findByPlaceholderText("Pick up date");
+      expect(node).toBeDefined();
+    });
+  });
+
+  test("User should able to add notes and save", ({ given, when, then }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I add notes and save", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "SET_ORDER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+
+      const note_text_area = await screen.findByPlaceholderText("Add Note");
+      fireEvent.change(note_text_area, { target: { value: "New notes" } });
+
+      let node = await screen.findByTestId("switch-test");
+      let statusSwitch = node.querySelectorAll(
+        "input[type='checkbox']"
+      )[0] as HTMLInputElement;
+      fireEvent.click(statusSwitch);
+    });
+    then("I can see the updated details", async () => {
+      const note_text_area = await screen.findByPlaceholderText("Add Note");
+      expect(note_text_area).toHaveValue("New notes");
+    });
+  });
+
+  test("User should able to create new quick drop order", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I change customer phone number", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      fireEvent.change(mobile_number_input, { target: { value: "560091203" } });
+    });
+    then("I can see the customer name", async () => {
+      const customer = await screen.findByText("Pritesh Patel - 560091203");
+      expect(customer).toBeDefined();
+    });
+    when("I select customer", async () => {
+      const customer = await screen.findByText("Pritesh Patel - 560091203");
+      fireEvent.click(customer);
+    });
+    then("Value has been selected with customer", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      expect(mobile_number_input).toHaveValue("Pritesh Patel - 560091203");
+    });
+    when("I click on quickdrop plus button", async () => {
+      const quick_plus_btn = await screen.findByTestId("quickDropPlusButton");
+      fireEvent.click(quick_plus_btn);
+    });
+    then("New order will create", async () => {
+      expect(spyFetch).toHaveBeenCalledWith(
+        baseURL + "//bx_block_order_management/orders/new_order",
+        {
+          headers: headersWithContent,
+          method: "POST",
+          body: '{"data":{"customer_id":"1356","notes":"","store_management_id":66,"save_for_future":false,"is_quick_drop":true,"order_items_attributes":[{"quantity":1}]}}',
+        }
+      );
+    });
+  });
+
+  test("User should able to update quick drop order", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I change customer phone number", async () => {
+
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "CUSTOMER_PHONE"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message)
+
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      fireEvent.change(mobile_number_input, { target: { value: "560091201" } });
+    });
+    then("I can see the customer name", async () => {
+      const customer = await screen.findByText("Pritesh Makasana - 560091201");
+      expect(customer).toBeDefined();
+    });
+    when("I select customer", async () => {
+      const customer = await screen.findByText("Pritesh Makasana - 560091201");
+      fireEvent.click(customer);
+    });
+    then("Value has been selected with customer", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      expect(mobile_number_input).toHaveValue("Pritesh Makasana - 560091201");
+    });
+    when("I click on quickdrop plus button", async () => {
+      const quick_plus_btn = await screen.findByTestId("quickDropPlusButton");
+      fireEvent.click(quick_plus_btn);
+    });
+    then("Qty will update", async () => {
+      const quick_drop_count = await screen.findByTestId("quickDropInput");
+      expect(quick_drop_count).toHaveValue("3");
+    });
+    when("I click on quickdrop minus button", async () => {
+      const quick_minus_btn = await screen.findByTestId("quickDropMinusButton");
+      fireEvent.click(quick_minus_btn);
+    });
+    then("Qty update API will called", async () => {
+      expect(spyFetch).toHaveBeenCalledWith(
+        baseURL + "//bx_block_order_management/orders/5983",
+        {
+          headers: headersWithContent,
+          method: "PUT",
+          body: '{"data":{"customer_id":"1356","notes":"","store_management_id":66,"save_for_future":false,"is_quick_drop":true,"order_items_attributes":[{"id":11159,"quantity":2,"_destroy":false}]}}',
+        }
+      );
+    });
+    when("I click on pay button", async () => {
+      const pay_button = await screen.findByTestId("btnPay");
+      fireEvent.click(pay_button);
+    });
+    then("Payment modal appear", async () => {
+      const payment_model = await screen.findByTestId("paymentModal");
+      expect(payment_model).toBeDefined();
+    });
+    when("I select payment method", async () => {
+      const pay_later = await screen.findByText("Pay Later");
+      fireEvent.click(pay_later);
+    });
+    then("Pay button appear", async () => {
+      const pay_later_btn = await screen.findByTestId("btn-pay-later");
+      expect(pay_later_btn).toBeDefined();
+      fireEvent.click(pay_later_btn);
+    });
+  });
+
+  test("User should see the order catalogue in cart", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("Order is update with cart catalogue", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "SET_ORDER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+    });
+    then("I can see the cart details", async () => {
+      const product_name = await screen.findByText("Carpet sub 2");
+      expect(product_name).toBeDefined();
+    });
+  });
+
+  test("User should able to perform action in cart", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("Order is update with cart catalogue", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "SET_ORDER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+    });
+    then("I can see the cart details", async () => {
+      const product_name = await screen.findByText("Carpet sub 2");
+      expect(product_name).toBeDefined();
+    });
+    when("I perform cart action", async () => {
+      const subtotal_collaps = await screen.findByTestId("order-summary-total");
+      fireEvent.click(subtotal_collaps);
+
+      const increase_qty_cart = await screen.findByTestId(
+        "cart-catalogue-increase-930"
+      );
+      fireEvent.click(increase_qty_cart);
+
+      const decrease_qty_cart = await screen.findByTestId(
+        "cart-catalogue-decrease-930"
+      );
+      fireEvent.click(decrease_qty_cart);
+
+      const delete_qty_cart = await screen.findByTestId(
+        "cart-catalogue-delete-930"
+      );
+      fireEvent.click(delete_qty_cart);
+
+      const clear_cart = await screen.findByTestId("clear-all-btn");
+      fireEvent.click(clear_cart);
+    });
+    then("I can see the quantity", async () => {
+      const catalogue_qty = await screen.findByTestId("catalogue-cart-qty-930");
+      expect(catalogue_qty.innerHTML).toBe("1");
+    });
+  });
+
+  test("User should able to pay the order with promocode", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I change customer phone number", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      fireEvent.change(mobile_number_input, { target: { value: "560091205" } });
+    });
+    then("I can see the customer name", async () => {
+      const customer = await screen.findByText("Pritesh5 Patel - 560091205");
+      expect(customer).toBeDefined();
+    });
+    when("I select customer", async () => {
+      const customer = await screen.findByText("Pritesh5 Patel - 560091205");
+      fireEvent.click(customer);
+    });
+    then("Value has been selected with customer", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      expect(mobile_number_input).toHaveValue("Pritesh5 Patel - 560091205");
+    });
+    when("I click on pay button", async () => {
+      const btn_pay = await screen.findByTestId("btnPay");
+      fireEvent.click(btn_pay);
+    });
+    then("I can see the payment modal", async () => {
+      const payment_modal = await screen.findByText("Payment Method");
+      expect(payment_modal).toBeDefined();
+    });
+    when("I select cash method and apply promocode", async () => {
+      const btn_cash_method = await screen.findByTestId("payment-section-Cash");
+      fireEvent.click(btn_cash_method);
+
+      const apply_promocode_btn = await screen.findByTestId(
+        "btn-promoCode-apply"
+      );
+      fireEvent.click(apply_promocode_btn);
+
+      const promo_radio_btn = await screen.findByTestId("promo-item-radio");
+      fireEvent.click(promo_radio_btn);
+
+      const apply_promocode_btn2 = await screen.findByTestId(
+        "btn-promoCode-apply2"
+      );
+      fireEvent.click(apply_promocode_btn2);
+    });
+    then("I can see the save money string", async () => {
+      const save_money = await screen.findByText("Save SAR 50.0");
+      expect(save_money).toBeDefined();
+    });
+    when("I click on pay button", async () => {
+      localStorage.setItem("token", "token2");
+      await new Promise((r) => setTimeout(r, 2000))
+      const pay_cash_btn = await screen.findByTestId("btn-cash-payment");
+      fireEvent.click(pay_cash_btn);
+    });
+    then("I can see the order summary", async () => {
+      await new Promise((r) => setTimeout(r, 2000));
+      const order_number = await screen.findByText("Order #OD00005742");
+      expect(order_number).toBeDefined();
+
+      const close_btn_summary = await screen.findByTestId(
+        "btn-closeOrderSummary"
+      );
+      fireEvent.click(close_btn_summary);
+    });
+  });
+
+  test("User should able to pay the order with promocode with new order", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("I change customer phone number", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      fireEvent.change(mobile_number_input, { target: { value: "560091205" } });
+    });
+    then("I can see the customer name", async () => {
+      const customer = await screen.findByText("Pritesh5 Patel - 560091205");
+      expect(customer).toBeDefined();
+    });
+    when("I select customer", async () => {
+      const customer = await screen.findByText("Pritesh5 Patel - 560091205");
+      fireEvent.click(customer);
+    });
+    then("Value has been selected with customer", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      expect(mobile_number_input).toHaveValue("Pritesh5 Patel - 560091205");
+    });
+    when("I click on pay button", async () => {
+      const btn_pay = await screen.findByTestId("btnPay");
+      fireEvent.click(btn_pay);
+    });
+    then("I can see the payment modal", async () => {
+      const payment_modal = await screen.findByText("Payment Method");
+      expect(payment_modal).toBeDefined();
+    });
+    when("I select cash method and apply promocode", async () => {
+      const btn_cash_method = await screen.findByTestId("payment-section-Cash");
+      fireEvent.click(btn_cash_method);
+
+      const apply_promocode_btn = await screen.findByTestId(
+        "btn-promoCode-apply"
+      );
+      fireEvent.click(apply_promocode_btn);
+
+      const promo_radio_btn = await screen.findByTestId("promo-item-radio");
+      fireEvent.click(promo_radio_btn);
+
+      const apply_promocode_btn2 = await screen.findByTestId(
+        "btn-promoCode-apply2"
+      );
+      fireEvent.click(apply_promocode_btn2);
+    });
+    then("I can see the save money string", async () => {
+      const save_money = await screen.findByText("Save SAR 50.0");
+      expect(save_money).toBeDefined();
+    });
+    when("I click on pay button", async () => {
+      localStorage.setItem("token", "token2");
+      const pay_cash_btn = await screen.findByTestId("btn-cash-payment");
+      fireEvent.click(pay_cash_btn);
+    });
+    then("I can see the order summary", async () => {
+      await new Promise((r) => setTimeout(r, 2000));
+      const order_number = await screen.findByText("Order #OD00005742");
+      expect(order_number).toBeDefined();
+
+      const printReceiptBtn = await screen.findByTestId("btn-printReceipt");
+      fireEvent.click(printReceiptBtn);
+      await new Promise((r) => setTimeout(r, 2000));
+
+      const new_btn_summary = await screen.findByTestId("btn-newOrder");
+      fireEvent.click(new_btn_summary);
+    });
+  });
+
+  test("User should see the order catalogue in cart and then navigate to edit preferences", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("Order is update with cart catalogue", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "SET_ORDER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+    });
+    then("I can see the cart details", async () => {
+      const product_name = await screen.findByText("Carpet sub 2");
+      expect(product_name).toBeDefined();
+    });
+    when("I click on edit preference button from shopping cart", async () => {
+      await new Promise((r) => setTimeout(r, 2000));
+      const edit_preference_btn = await screen.findByTestId(
+        "navigate-to-edit-btn"
+      );
+      fireEvent.click(edit_preference_btn);
+    });
+    then("Edit preference page will be display", async () => {
+      const edit_preference_btn = await screen.findByTestId(
+        "navigate-to-edit-btn"
+      );
+      expect(edit_preference_btn).toBeDefined();
+    });
+  });
+
+  test("User should see the order catalogue in cart for prefrence customer", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      window.localStorage.setItem(
+        "preferenceCustomer",
+        JSON.stringify(preferenceCustomer)
+      );
+      screen = render(<ShoppingCart {...screenProps} />);
+      await new Promise((r) => setTimeout(r, 2000));
+    });
+    when("Order is update with cart catalogue", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "SET_ORDER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+    });
+    then("I can see the cart details", async () => {
+      const product_name = await screen.findByText("Carpet sub 2");
+      expect(product_name).toBeDefined();
+    });
+  });
+
+  test("User navigates to ShoppingCart for quickdrop edit order", ({ given,when, then }) => {
+    given("I am a User loading ShoppingCart for quickdrop edit order", async () => {
+      localStorage.setItem("token","token10")
+      screen = render(<ShoppingCart {...screenEditProps} />);
+    });
+    when("I edit the order for quickdrop", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "EDIT_SELECT_CUSTOMER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+    });
+    then("I can see the edited order", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "EDIT_SELECT_CUSTOMER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse1.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+      expect(message).toBeDefined();
+    });
+
+    when("I edit the set order for quickdrop", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "SET_ORDER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse1.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+    });
+
+    when("I click on pay button for quickdrop", async () => {
+      const mobile_number_input = await screen.findByPlaceholderText(
+        "Mobile Number"
+      );
+      fireEvent.change(mobile_number_input, { target: { value: "56009120" } });
+      const btn_pay = await screen.findByTestId("btnPay");
+      fireEvent.click(btn_pay);
+    });
+    then("I can see the payment modal for quickdrop", async () => {
+      const payment_modal = await screen.findByText("Payment Method");
+      expect(payment_modal).toBeDefined();
+    });
+
+    when("I click on pay button for quickdrop", async () => {
+      await new Promise((r) => setTimeout(r, 2000))
+      const pay_cash_btn = await screen.findByTestId("btn-cash-payment");
+      fireEvent.click(pay_cash_btn);
+    });
+    then("I can see the order summary quickdrop", async () => {
+      await new Promise((r) => setTimeout(r, 2000));
+
+      const close_btn_summary = await screen.findByTestId(
+        "btn-newOrder"
+      );
+      fireEvent.click(close_btn_summary);
+    });
+  });
+
+  test("User navigates to ShoppingCart for placed edit order", ({ given,when, then }) => {
+    given("I am a User loading ShoppingCart for placed edit order", async () => {
+      localStorage.setItem("token","token11")
+      screen = render(<ShoppingCart {...screenEditProps} />);
+    });
+    when("I edit the order for placed", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "SET_ORDER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+    });
+    then("I can see the edited placed order", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "SET_ORDER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+      const btn_pay = await screen.findByTestId("btnPay");
+      fireEvent.click(btn_pay);
+      expect(message).toBeDefined();
+
+
+      const pay_cash_btn = await screen.findByTestId("btn-cash-payment");
+      fireEvent.click(pay_cash_btn);
+
+      const close_btn_summary = await screen.findByTestId(
+        "btn-closeOrderSummary"
+      );
+      fireEvent.click(close_btn_summary);
+    });
+  });
+
+  test("User should able to add custom quantity", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("Order is update with cart catalogue", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "SET_ORDER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+    });
+    then("I can see the cart details", async () => {
+      const product_name = await screen.findByText("Carpet sub 2");
+      expect(product_name).toBeDefined();
+    });
+    when("I add custom qty", async () => {
+      let node = await screen.findByTestId("qty-input-11275");
+      fireEvent.change(node, { target: { value: "121" }});
+    });
+    then("I can see the quantity", async () => {
+      let node = await screen.findByTestId("qty-input-11275");
+      expect(node).toHaveValue("121");
+    });
+  });
+
+  test("User should able to not able to add special character", ({
+    given,
+    when,
+    then,
+  }) => {
+    given("I am a User loading ShoppingCart", async () => {
+      screen = render(<ShoppingCart {...screenProps} />);
+    });
+    when("Order is update with cart catalogue", async () => {
+      let message = new Message(
+        getCustomEnumName(CustomEnums.CustomActionReducers)
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerAction),
+        "SET_ORDER"
+      );
+      message.addData(
+        getCustomEnumName(CustomEnums.CustomReducerPayload),
+        orderUpdateResponse.data.attributes
+      );
+      runEngine.sendMessage(message.id, message);
+    });
+    then("I can see the cart details", async () => {
+      const product_name = await screen.findByText("Carpet sub 2");
+      expect(product_name).toBeDefined();
+    });
+    when("I add custom qty", async () => {
+      let node = await screen.findByTestId("qty-input-11275");
+      fireEvent.change(node, { target: { value: "-10" }});
+
+      await new Promise((r) => setTimeout(r, 800));
+    });
+    then("I can see the error", async () => {
+      let node = await screen.findByText("Please enter number only");
+      expect(node).toBeDefined();
+    });
+  });
+  
+});
