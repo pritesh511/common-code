@@ -1,0 +1,51 @@
+export const makeApiMessage = ({
+  url = "",
+  headers = {},
+  method = "GET",
+  body = null,
+  isHeader = false
+}: {
+  body?: any;
+  url: string;
+  headers?: any;
+  method: string;
+  isHeader?: boolean
+}) => {
+  const requestMessage = new Message(
+    getName(MessageEnum.RestAPIRequestMessage)
+  );
+
+  const header = {
+    "Content-Type": "application/json",
+    token: localStorage.getItem("token"),
+    ...headers,
+  };
+
+  const headreWithoutContentType = {
+    token: localStorage.getItem("token"),
+    ...headers,
+  };
+
+  requestMessage.addData(
+    getName(MessageEnum.RestAPIResponceEndPointMessage),
+    url
+  );
+
+  requestMessage.addData(
+    getName(MessageEnum.RestAPIRequestHeaderMessage),
+    JSON.stringify(!isHeader ? header : headreWithoutContentType)
+  );
+
+  requestMessage.addData(
+    getName(MessageEnum.RestAPIRequestMethodMessage),
+    method
+  );
+
+  body &&
+    requestMessage.addData(
+      getName(MessageEnum.RestAPIRequestBodyMessage),
+      body
+    );
+
+  return requestMessage;
+}
