@@ -121,6 +121,14 @@ export class MockAPIHelperBlock extends BlockComponent<Props, State, SS> {
     this.receive = this.receive.bind(this);
   }
 
+  // for new build card
+  // receive(from: string, message: Message) {
+  //   RestApiClientBlock.getInstance().setBaseURL(baseURLOrderManagement);
+  //   let apiServerBlock = RestApiClientBlock.getInstance();
+  //   console.log("apiServerBlock=>",apiServerBlock)
+  //   apiServerBlock.receive(from, message);
+  // }
+
   receive(from: string, message: Message) {
     let apiServerBlock = RestApiClientBlock.getInstance();
     apiServerBlock.receive(from, message);
