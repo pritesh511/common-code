@@ -156,3 +156,11 @@ export function commonDebounce<T extends (...args: any[]) => void>(
     timer = setTimeout(() => func(...args), delay);
   };
 }
+
+const requestMessage = makeApiMessage({
+  url: apiUrl,
+  method: configJSON.apiMethodTypeGet,
+});
+
+this.exportTemplateFileGalleryApiId = requestMessage.messageId;
+runEngine.sendMessage(requestMessage.id, requestMessage);
